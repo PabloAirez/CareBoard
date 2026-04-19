@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Lock, User, Activity, ArrowRight } from 'lucide-react';
+import { toast } from 'react-toastify';
 
 export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
     
     setTimeout(async () => {
       if (username === 'hrsj' && password === '123456') {
@@ -32,7 +32,7 @@ export default function Login() {
           navigate('/first-access');
         }
       } else {
-        setError('Credenciais inválidas. Tente novamente.');
+        toast.error('Credenciais inválidas. Tente novamente.');
         setLoading(false);
       }
     }, 1000);
@@ -58,11 +58,6 @@ export default function Login() {
           </p>
         </div>
 
-        {error && (
-          <div className="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-xl text-red-200 text-sm font-medium animate-pulse">
-            {error}
-          </div>
-        )}
 
         <form onSubmit={handleLogin} className="space-y-6">
           
