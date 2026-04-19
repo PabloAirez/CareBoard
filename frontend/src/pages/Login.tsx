@@ -1,9 +1,109 @@
-const Header = () => {
-  return (
-    <header>
-        <h1>Login</h1>
-    </header>
-  )
-}
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Lock, User, Activity, ArrowRight } from 'lucide-react';
 
-export default Header
+export default function Login() {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    
+    // Simulate backend call latency
+    setTimeout(async () => {
+      if (username === 'hrsj' && password === '123456') {
+        try {
+          // Check backend for hospital config
+          const configRes = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/config/status`);
+          if (configRes.ok) {
+            const data = await configRes.json();
+            if (data.isConfigured) {
+              navigate('/select-unit');
+            } else {
+              navigate('/first-access');
+            }
+          } else {
+             // fallback to first access if backend not answering yet
+             navigate('/first-access');
+          }
+        } catch (err) {
+          navigate('/first-access');
+        }
+      } else {
+        setError('Credenciais inválidas. Tente novamente.');
+        setLoading(false);
+      }
+    }, 1000);
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl"></div>
+      </div>
+      
+      <div className="w-full max-w-md bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl p-8 relative z-10">
+        <div className="flex flex-col items-center mb-8">
+          <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30 mb-4 transition-transform hover:scale-105">
+            <Activity className="w-8 h-8 text-white" />
+          </div>
+          <h1 className="text-3xl font-black text-white tracking-tight">Careboard</h1>
+          <p className="text-blue-200 text-sm mt-2 font-medium">Painel Inteligente de Enfermaria</p>
+        </div>
+
+        {error && (
+          <div className="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-xl text-red-200 text-sm font-medium animate-pulse">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleLogin} className="space-y-6">
+          <div className="space-y-4">
+            <div className="relative group">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <User className="h-5 w-5 text-blue-300 group-focus-within:text-blue-400 transition-colors" />
+              </div>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="block w-full pl-11 pr-4 py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-blue-200/50 focus:bg-white/10 focus:border-blue-400 focus:ring-1 focus:ring-blue-400 transition-all outline-none"
+                placeholder="Usuário"
+                required
+              />
+            </div>
+
+            <div className="relative group">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <Lock className="h-5 w-5 text-blue-300 group-focus-within:text-blue-400 transition-colors" />
+              </div>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="block w-full pl-11 pr-4 py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-blue-200/50 focus:bg-white/10 focus:border-blue-400 focus:ring-1 focus:ring-blue-400 transition-all outline-none"
+                placeholder="Senha"
+                required
+              />
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full flex items-center justify-center gap-2 py-4 px-4 border border-transparent rounded-2xl shadow-sm text-lg font-bold text-white bg-blue-600 hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
+          >
+            {loading ? 'Autenticando...' : 'Entrar no Sistema'}
+            {!loading && <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
