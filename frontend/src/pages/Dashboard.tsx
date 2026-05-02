@@ -5,6 +5,7 @@ const Dashboard = ()=>{
 
     return (
         <Header occupancyRate={85}></Header>
+        
     )
 
 }
