@@ -5,13 +5,11 @@ export function BedCard({ bed }: { bed: Bed }) {
   const mews = bed.vitals ? calculateMEWS(bed.vitals) : 0;
   const risk = getRiskLevel(mews);
 
-  // Função para anonimizar nome (iniciais)
   const getInitials = (name?: string) => {
     if (!name) return '---';
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 3);
   };
 
-  // Função para calcular tempo de permanência
   const getStayDuration = (admissionDate?: Date) => {
     if (!admissionDate) return '--';
     const now = new Date();
@@ -28,85 +26,71 @@ export function BedCard({ bed }: { bed: Bed }) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Ocupado':
-        return { bg: 'bg-white', border: 'border-l-4 border-primary', text: 'text-primary' };
+        return { bg: 'bg-white', border: 'border-primary', text: 'text-primary' };
       case 'Livre':
-        return { bg: 'bg-green-50', border: 'border-l-4 border-secondary', text: 'text-secondary' };
+        return { bg: 'bg-secondary-light/55', border: 'border-secondary', text: 'text-secondary-dark' };
       case 'Aguardando Limpeza':
-        return { bg: 'bg-yellow-50', border: 'border-l-4 border-amber-500', text: 'text-amber-600' };
       case 'Em Limpeza':
-        return { bg: 'bg-blue-50', border: 'border-l-4 border-blue-500', text: 'text-blue-600' };
+        return { bg: 'bg-primary-light/65', border: 'border-primary-dark', text: 'text-primary-dark' };
       case 'Bloqueado':
-        return { bg: 'bg-red-50', border: 'border-l-4 border-red-500', text: 'text-red-600' };
+        return { bg: 'bg-accent-light/65', border: 'border-accent', text: 'text-accent-dark' };
       default:
-        return { bg: 'bg-gray-50', border: 'border-l-4 border-gray-300', text: 'text-gray-600' };
+        return { bg: 'bg-white', border: 'border-primary-light', text: 'text-primary-dark/65' };
     }
   };
 
-  const getRiskColor = (risk: string) => {
-    switch (risk.toLowerCase()) {
+  const getRiskColor = (riskLevel: string) => {
+    switch (riskLevel.toLowerCase()) {
       case 'baixo':
-        return { badge: 'bg-green-100 text-green-800', bg: 'bg-green-50' };
+        return 'bg-secondary-light text-secondary-dark';
       case 'moderado':
-        return { badge: 'bg-yellow-100 text-yellow-800', bg: 'bg-yellow-50' };
+        return 'bg-primary-light text-primary-dark';
       case 'alto':
-        return { badge: 'bg-red-100 text-red-800', bg: 'bg-red-50' };
+        return 'bg-accent-light text-accent-dark';
       default:
-        return { badge: 'bg-gray-100 text-gray-800', bg: 'bg-gray-50' };
+        return 'bg-primary-light text-primary-dark';
     }
   };
 
   const statusColors = getStatusColor(bed.status);
-  const riskColors = getRiskColor(risk);
 
   return (
-    <div className={`${statusColors.bg} ${statusColors.border} rounded-lg shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden h-48`}>
-      {/* Header */}
-      <div className="bg-white p-3 border-b border-gray-100">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-bold text-gray-900">L{bed.id.toString().padStart(2, '0')}</span>
-          <span className={`px-2 py-1 rounded-full text-xs font-semibold ${riskColors.badge}`}>
-            {mews}
+    <article className={`${statusColors.bg} rounded-lg border-l-4 ${statusColors.border} shadow-sm ring-1 ring-primary-light/80 transition hover:-translate-y-0.5 hover:shadow-md`}>
+      <div className="border-b border-primary-light/80 bg-white p-3">
+        <div className="mb-2 flex items-center justify-between">
+          <span className="text-sm font-black text-primary-dark">L{bed.id.toString().padStart(2, '0')}</span>
+          <span className={`rounded-full px-2 py-1 text-xs font-black ${getRiskColor(risk)}`}>
+            MEWS {mews}
           </span>
         </div>
         <div className="text-center">
-          <div className="text-lg font-bold text-gray-800 mb-1">{getInitials(bed.patientName)}</div>
-          <div className={`text-xs font-medium ${statusColors.text}`}>{bed.status}</div>
+          <div className="mb-1 text-lg font-black text-primary-dark">{getInitials(bed.patientName)}</div>
+          <div className={`text-xs font-bold ${statusColors.text}`}>{bed.status}</div>
         </div>
       </div>
 
-      {/* Vitals */}
       {bed.vitals && (
-        <div className="p-2 space-y-1 text-xs">
-          <div className="grid grid-cols-2 gap-1">
-            <div className="text-center">
-              <div className="font-semibold text-gray-700">{Math.round(bed.vitals.paSistolica)}/{Math.round(bed.vitals.paDiastolica)}</div>
-              <div className="text-gray-500">PA</div>
-            </div>
-            <div className="text-center">
-              <div className="font-semibold text-gray-700">{Math.round(bed.vitals.fc)}</div>
-              <div className="text-gray-500">FC</div>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-1">
-            <div className="text-center">
-              <div className="font-semibold text-gray-700">{Math.round(bed.vitals.fr)}</div>
-              <div className="text-gray-500">FR</div>
-            </div>
-            <div className="text-center">
-              <div className="font-semibold text-gray-700">{bed.vitals.temp.toFixed(1)}°</div>
-              <div className="text-gray-500">Temp</div>
-            </div>
-          </div>
+        <div className="grid grid-cols-2 gap-2 p-3 text-center text-xs">
+          <Vital label="PA" value={`${Math.round(bed.vitals.paSistolica)}/${Math.round(bed.vitals.paDiastolica)}`} />
+          <Vital label="FC" value={Math.round(bed.vitals.fc)} />
+          <Vital label="FR" value={Math.round(bed.vitals.fr)} />
+          <Vital label="Temp" value={`${bed.vitals.temp.toFixed(1)}°`} />
         </div>
       )}
 
-      {/* Footer */}
-      <div className="bg-gray-50 px-2 py-2 border-t border-gray-100">
-        <div className="text-center">
-          <div className="text-xs text-gray-500">Permanência</div>
-          <div className="text-sm font-semibold text-gray-700">{getStayDuration(bed.admissionDate)}</div>
-        </div>
+      <div className="border-t border-primary-light/80 bg-white/70 px-3 py-2 text-center">
+        <div className="text-xs font-medium text-primary-dark/55">Permanência</div>
+        <div className="text-sm font-black text-primary-dark">{getStayDuration(bed.admissionDate)}</div>
       </div>
+    </article>
+  );
+}
+
+function Vital({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="rounded-md bg-white/80 px-2 py-1 ring-1 ring-primary-light/70">
+      <div className="font-black text-primary-dark">{value}</div>
+      <div className="font-medium text-primary-dark/55">{label}</div>
     </div>
   );
 }

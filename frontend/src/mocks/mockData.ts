@@ -7,7 +7,7 @@ const randomVitals = (): Vitals => ({
   fc: 60 + Math.random() * 80,
   fr: 12 + Math.random() * 20,
   temp: 36 + Math.random() * 2,
-  consciencia: 'Alerta'
+  consciencia: 'Alerta',
 });
 
 const patientNames = [
@@ -18,7 +18,7 @@ const patientNames = [
   'Felipe Cardoso', 'Carolina Pinto', 'Diego Moreira', 'Letícia Nunes', 'Vinícius Correia',
   'Sofia Monteiro', 'Gustavo Vieira', 'Manuela Santos', 'Leonardo Ramos', 'Alice Lima',
   'Matheus Costa', 'Laura Ferreira', 'Enzo Oliveira', 'Valentina Pereira', 'Davi Silva',
-  'Helena Rodrigues', 'Arthur Gomes', 'Luiza Carvalho', 'Bernardo Martins', 'Sophia Souza'
+  'Helena Rodrigues', 'Arthur Gomes', 'Luiza Carvalho', 'Bernardo Martins', 'Sophia Souza',
 ];
 
 export const generateBeds = (): Bed[] =>
@@ -27,7 +27,7 @@ export const generateBeds = (): Bed[] =>
     status: Math.random() > 0.15 ? 'Ocupado' : Math.random() > 0.5 ? 'Livre' : 'Aguardando Limpeza',
     patientName: Math.random() > 0.2 ? patientNames[i % patientNames.length] : undefined,
     vitals: Math.random() > 0.2 ? randomVitals() : undefined,
-    admissionDate: new Date(Date.now() - Math.random() * 7 * 86400000) // Até 7 dias atrás
+    admissionDate: new Date(Date.now() - Math.random() * 7 * 86400000), // Até 7 dias atrás
   }));
 
 export const generateCalls = (beds: Bed[]): Call[] => {
@@ -38,6 +38,6 @@ export const generateCalls = (beds: Bed[]): Call[] => {
       bedId: b.id,
       type: Math.random() > 0.7 ? 'Assistência' : Math.random() > 0.5 ? 'Medicação' : 'Alimentação',
       priority: Math.random() > 0.8 ? 'Emergência' : 'Normal',
-      time: new Date(Date.now() - Math.random() * 3600000) // Última hora
+      time: new Date(Date.now() - Math.random() * 3600000), // Última hora
     }));
 };

@@ -1,25 +1,26 @@
+import { CheckCircle2, ClipboardList, PhoneCall, ShieldAlert } from 'lucide-react';
 import type { Call } from '../../types/Dashboard';
 
 export function CallList({ calls }: { calls: Call[] }) {
   const getTypeColor = (type: string) => {
     switch (type.toLowerCase()) {
       case 'urgent':
-        return { bg: 'bg-red-50', border: 'border-l-4 border-red-500', badge: 'bg-red-100 text-red-800', icon: '🚨' };
-      case 'high':
-        return { bg: 'bg-orange-50', border: 'border-l-4 border-orange-500', badge: 'bg-orange-100 text-orange-800', icon: '⚠️' };
+      case 'emergência':
+        return { bg: 'bg-accent-light/65', border: 'border-accent', badge: 'bg-accent text-white', icon: ShieldAlert };
       case 'normal':
-        return { bg: 'bg-blue-50', border: 'border-l-4 border-primary', badge: 'bg-primary-light text-primary-dark', icon: '📞' };
+        return { bg: 'bg-primary-light/65', border: 'border-primary', badge: 'bg-primary text-white', icon: PhoneCall };
       case 'routine':
-        return { bg: 'bg-green-50', border: 'border-l-4 border-secondary', badge: 'bg-secondary-light text-secondary-dark', icon: '✓' };
+        return { bg: 'bg-secondary-light/65', border: 'border-secondary', badge: 'bg-secondary text-white', icon: CheckCircle2 };
       default:
-        return { bg: 'bg-gray-50', border: 'border-l-4 border-gray-300', badge: 'bg-gray-100 text-gray-800', icon: '•' };
+        return { bg: 'bg-white', border: 'border-primary-light', badge: 'bg-primary-light text-primary-dark', icon: ClipboardList };
     }
   };
 
   if (calls.length === 0) {
     return (
-      <div className="bg-white rounded-2xl shadow-lg p-8 text-center border-l-4 border-secondary">
-        <p className="text-gray-500 text-lg">✅ Nenhuma chamada ativa</p>
+      <div className="rounded-lg border-l-4 border-secondary bg-white p-8 text-center shadow-sm ring-1 ring-secondary-light">
+        <CheckCircle2 className="mx-auto mb-3 text-secondary" size={36} />
+        <p className="text-lg font-bold text-secondary-dark">Nenhuma chamada ativa</p>
       </div>
     );
   }
@@ -27,22 +28,27 @@ export function CallList({ calls }: { calls: Call[] }) {
   return (
     <div className="space-y-3">
       {calls.map(c => {
-        const colors = getTypeColor(c.type);
+        const colors = getTypeColor(c.priority);
+        const Icon = colors.icon;
         return (
-          <div 
-            key={c.id} 
-            className={`${colors.bg} ${colors.border} rounded-xl shadow-md p-4 hover:shadow-lg transition-shadow duration-200 flex items-center justify-between`}
+          <div
+            key={c.id}
+            className={`${colors.bg} rounded-lg border-l-4 ${colors.border} p-4 shadow-sm ring-1 ring-primary-light/80 transition hover:shadow-md`}
           >
-            <div className="flex items-center space-x-4 flex-1">
-              <span className="text-2xl">{colors.icon}</span>
-              <div>
-                <p className="font-semibold text-gray-900">Leito {c.bedId}</p>
-                <p className="text-sm text-gray-600">{c.type}</p>
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex flex-1 items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-md bg-white text-primary">
+                  <Icon size={20} />
+                </div>
+                <div>
+                  <p className="font-black text-primary-dark">Leito {c.bedId}</p>
+                  <p className="text-sm font-medium text-primary-dark/60">{c.type}</p>
+                </div>
               </div>
+              <span className={`rounded-full px-3 py-1 text-xs font-black ${colors.badge}`}>
+                {c.priority.toUpperCase()}
+              </span>
             </div>
-            <span className={`px-4 py-2 rounded-full text-xs font-bold ${colors.badge}`}>
-              {c.type.toUpperCase()}
-            </span>
           </div>
         );
       })}

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Database, Server, Key, User, Activity } from 'lucide-react';
+import { useState, type FormEvent } from 'react';
+import { Activity, Database } from 'lucide-react';
 
 type Props = {
   onSubmit: (data: any) => void;
@@ -13,7 +13,7 @@ export default function SighConfigure({ onSubmit, loading }: Props) {
   const [dbUser, setDbUser] = useState('');
   const [dbPassword, setDbPassword] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     onSubmit({ host, port, dbName, dbUser, dbPassword });
   };

@@ -1,4 +1,5 @@
-import { Activity, Bed, Percent } from 'lucide-react';
+import { Activity, Bed, Brush, ShieldAlert, TrendingUp } from 'lucide-react';
+import type { ElementType } from 'react';
 import { useCareboardMock } from '../../hooks/useCareboardMocks';
 import { useDashboardStats } from '../../hooks/useDashboardStats';
 
@@ -7,108 +8,96 @@ interface HeaderProps {
   unitName?: string;
 }
 
-export default function Header({
-  hospitalName = "Nome aqui",
-  unitName = "Unidade"
-}: HeaderProps) {
+interface StatCardProps {
+  label: string;
+  value: string | number;
+  tone: 'primary' | 'secondary' | 'accent';
+  icon: ElementType;
+  progress?: number;
+}
 
-    const { beds, calls } = useCareboardMock();
-  const stats = useDashboardStats(beds);
+const toneStyles = {
+  primary: {
+    border: 'border-primary',
+    bg: 'bg-primary-light',
+    text: 'text-primary',
+    value: 'text-primary-dark',
+    bar: 'bg-primary',
+  },
+  secondary: {
+    border: 'border-secondary',
+    bg: 'bg-secondary-light',
+    text: 'text-secondary',
+    value: 'text-secondary-dark',
+    bar: 'bg-secondary',
+  },
+  accent: {
+    border: 'border-accent',
+    bg: 'bg-accent-light',
+    text: 'text-accent',
+    value: 'text-accent-dark',
+    bar: 'bg-accent',
+  },
+};
 
+function StatCard({ label, value, tone, icon: Icon, progress }: StatCardProps) {
+  const styles = toneStyles[tone];
 
   return (
-    <header className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shadow-sm">
-      
-      {/* 🔹 Lado esquerdo: Identificação */}
-      <div className="flex items-center gap-4">
-        <div className="bg-blue-600 text-white p-2 rounded-xl shadow-md">
-          <Activity size={22} />
+    <div className={`rounded-lg border-l-4 ${styles.border} bg-white p-4 shadow-sm ring-1 ring-primary-light/70`}>
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-wide text-primary-dark/55">{label}</p>
+          <p className={`mt-1 text-2xl font-black ${styles.value}`}>{value}</p>
         </div>
-
-        <div className="leading-tight">
-          <h1 className="text-xl font-black text-slate-800">
-            Careboard
-          </h1>
-          <p className="text-sm text-slate-500 font-medium">
-            {hospitalName} • {unitName}
-          </p>
+        <div className={`flex h-10 w-10 items-center justify-center rounded-md ${styles.bg} ${styles.text}`}>
+          <Icon size={20} />
         </div>
       </div>
+      {typeof progress === 'number' && (
+        <div className="mt-3 h-2 overflow-hidden rounded-full bg-primary-light">
+          <div className={`h-full rounded-full ${styles.bar}`} style={{ width: `${progress}%` }} />
+        </div>
+      )}
+    </div>
+  );
+}
 
-      {/* 🔹 Lado direito: Indicadores */}
-      <div className="flex items-center gap-6">
+export default function Header({
+  hospitalName = 'Nome aqui',
+  unitName = 'Unidade',
+}: HeaderProps) {
+  const { beds } = useCareboardMock();
+  const stats = useDashboardStats(beds);
 
-        {/* Taxa de ocupação */}
-        <div className={`flex items-center gap-3 px-4 py-2 rounded-xl border`}>
-          
-          <div className="p-2 rounded-lg bg-white/60">
-            <Bed size={18} />
+  return (
+    <header className="rounded-lg bg-white px-5 py-4 shadow-sm ring-1 ring-primary-light">
+      <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
+        <div className="flex items-center gap-4">
+          <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary text-white shadow-sm">
+            <Activity size={24} />
           </div>
 
-          
-
-
-           {/* Ocupação */}
-          <div className="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-primary">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-medium">Ocupação</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">{stats.occupancy}%</p>
-              </div>
-              <div className="w-12 h-12 bg-primary-light rounded-lg flex items-center justify-center">
-                <span className="text-primary text-xl">📊</span>
-              </div>
-            </div>
-            <div className="mt-4 w-full bg-gray-200 rounded-full h-2">
-              <div
-                className="bg-gradient-to-r from-primary to-primary-dark h-2 rounded-full"
-                style={{ width: `${stats.occupancy}%` }}
-              ></div>
-            </div>
-          </div>
-
-          {/* Limpeza */}
-          <div className="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-secondary">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-medium">Limpeza</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">{stats.cleaning}</p>
-              </div>
-              <div className="w-12 h-12 bg-secondary-light rounded-lg flex items-center justify-center">
-                <span className="text-secondary text-xl">🧹</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Bloqueados */}
-          <div className="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-amber-500">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-medium">Bloqueados</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">{stats.blocked}</p>
-              </div>
-              <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
-                <span className="text-amber-600 text-xl">⛔</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Críticos */}
-          <div className="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-red-500">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-medium">Críticos</p>
-                <p className="text-3xl font-bold text-red-600 mt-2">{stats.highMews}</p>
-              </div>
-              <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
-                <span className="text-red-600 text-xl">🚨</span>
-              </div>
-            </div>
+          <div className="leading-tight">
+            <h1 className="text-2xl font-black text-primary-dark">Careboard</h1>
+            <p className="mt-1 text-sm font-medium text-primary-dark/60">
+              {hospitalName} | {unitName}
+            </p>
           </div>
         </div>
 
-
-
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <StatCard
+            label="Ocupação"
+            value={`${stats.occupancy}%`}
+            tone="primary"
+            icon={TrendingUp}
+            progress={stats.occupancy}
+          />
+          <StatCard label="Limpeza" value={stats.cleaning} tone="secondary" icon={Brush} />
+          <StatCard label="Bloqueados" value={stats.blocked} tone="accent" icon={Bed} />
+          <StatCard label="Críticos" value={stats.highMews} tone="accent" icon={ShieldAlert} />
+        </div>
       </div>
     </header>
   );
