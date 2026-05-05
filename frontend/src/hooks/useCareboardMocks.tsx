@@ -2,21 +2,25 @@ import { useEffect, useState } from 'react';
 import type { Bed, Call } from '../types/Dashboard';
 import { generateBeds, generateCalls } from '../mocks/mockData';
 
+const MOCK_REFRESH_INTERVAL_MS = 120000;
+
+const createMockSnapshot = () => {
+  const beds = generateBeds();
+  const calls = generateCalls(beds);
+
+  return { beds, calls };
+};
+
 export function useCareboardMock() {
-  const [beds, setBeds] = useState<Bed[]>([]);
-  const [calls, setCalls] = useState<Call[]>([]);
+  const [mockData, setMockData] = useState<{ beds: Bed[]; calls: Call[] }>(() => createMockSnapshot());
 
   useEffect(() => {
     const interval = setInterval(() => {
-      const newBeds = generateBeds();
-      const newCalls = generateCalls(newBeds);
-
-      setBeds(newBeds);
-      setCalls(newCalls);
-    }, 3000);
+      setMockData(createMockSnapshot());
+    }, MOCK_REFRESH_INTERVAL_MS);
 
     return () => clearInterval(interval);
   }, []);
 
-  return { beds, calls };
+  return mockData;
 }

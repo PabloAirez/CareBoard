@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Building2, ArrowRight, Loader2, AlertTriangle } from 'lucide-react';
-import { motion } from 'motion/react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
@@ -102,13 +101,10 @@ export default function SelectUnit() {
 
             {/* Lista */}
             {units.length > 0 ? (
-              units.map((u, i) => (
-                <motion.button
+              units.map((u) => (
+                <button
                   key={u.id}
                   data-cy={`unit-${u.id}`}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.05 }}
                   onClick={() => selectUnit(u.id)}
                   className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm
                   hover:border-primary hover:ring-2 hover:ring-primary-light
@@ -124,7 +120,7 @@ export default function SelectUnit() {
                   </div>
 
                   <ArrowRight className="text-gray-300 group-hover:text-primary group-hover:translate-x-1 transition-all" />
-                </motion.button>
+                </button>
               ))
             ) : (
               <div className="col-span-full text-center text-gray-400 py-10 bg-white rounded-2xl border border-dashed border-gray-300">

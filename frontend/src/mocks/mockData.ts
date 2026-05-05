@@ -1,4 +1,4 @@
-import type { Bed, Call } from '../types/Dashboard';
+import type { Bed, BedStatus, Call } from '../types/Dashboard';
 import type { Vitals } from '../types/Clinical';
 
 const randomVitals = (): Vitals => ({
@@ -21,23 +21,45 @@ const patientNames = [
   'Helena Rodrigues', 'Arthur Gomes', 'Luiza Carvalho', 'Bernardo Martins', 'Sophia Souza',
 ];
 
+const randomBedStatus = (): BedStatus => {
+  const roll = Math.random();
+
+  if (roll < 0.72) return 'Ocupado';
+  if (roll < 0.84) return 'Livre';
+  if (roll < 0.93) return 'Aguardando Limpeza';
+  if (roll < 0.98) return 'Em Limpeza';
+  return 'Bloqueado';
+};
+
 export const generateBeds = (): Bed[] =>
-  Array.from({ length: 40 }).map((_, i) => ({
-    id: i + 1,
-    status: Math.random() > 0.15 ? 'Ocupado' : Math.random() > 0.5 ? 'Livre' : 'Aguardando Limpeza',
-    patientName: Math.random() > 0.2 ? patientNames[i % patientNames.length] : undefined,
-    vitals: Math.random() > 0.2 ? randomVitals() : undefined,
-    admissionDate: new Date(Date.now() - Math.random() * 7 * 86400000), // Até 7 dias atrás
-  }));
+  Array.from({ length: 40 }).map((_, i) => {
+    const status = randomBedStatus();
+
+    if (status !== 'Ocupado') {
+      return {
+        id: i + 1,
+        status,
+      };
+    }
+
+    return {
+      id: i + 1,
+      status,
+      patientName: patientNames[i % patientNames.length],
+      vitals: randomVitals(),
+      admissionDate: new Date(Date.now() - Math.random() * 12 * 86400000),
+    };
+  });
 
 export const generateCalls = (beds: Bed[]): Call[] => {
   return beds
+    .filter((bed) => bed.status === 'Ocupado')
     .filter(() => Math.random() > 0.8)
-    .map((b) => ({
+    .map((bed) => ({
       id: crypto.randomUUID(),
-      bedId: b.id,
+      bedId: bed.id,
       type: Math.random() > 0.7 ? 'Assistência' : Math.random() > 0.5 ? 'Medicação' : 'Alimentação',
       priority: Math.random() > 0.8 ? 'Emergência' : 'Normal',
-      time: new Date(Date.now() - Math.random() * 3600000), // Última hora
+      time: new Date(Date.now() - Math.random() * 3600000),
     }));
 };
