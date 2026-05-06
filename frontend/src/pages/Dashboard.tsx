@@ -1,16 +1,19 @@
-import { CheckCircle2 } from 'lucide-react';
+﻿import { CheckCircle2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useCareboardMock } from '../hooks/useCareboardMocks';
 import { BedCard } from '../components/dashboard/BedCard';
 import { CallCard } from '../components/dashboard/CallCard';
 import Header from '../components/dashboard/Header';
+import { usePatientDemands } from '../hooks/usePatientDemands';
 
 const BEDS_PER_PAGE = 40;
 const BED_ROTATION_INTERVAL_MS = 30000;
 
 export default function Dashboard() {
   const { beds, calls } = useCareboardMock();
+  const { demands: patientDemands } = usePatientDemands();
   const [currentBedPage, setCurrentBedPage] = useState(0);
+  const activeCalls = useMemo(() => [...patientDemands, ...calls], [patientDemands, calls]);
 
   const bedPages = useMemo(() => {
     const pages = [];
@@ -96,12 +99,12 @@ export default function Dashboard() {
           <div className="border-b border-primary-light bg-primary p-3 text-white">
             <h2 className="text-base font-bold">Chamadas ativas</h2>
             <p className="mt-1 text-xs font-medium text-primary-light">
-              {calls.length} demanda{calls.length !== 1 ? 's' : ''} pendente{calls.length !== 1 ? 's' : ''}
+              {activeCalls.length} demanda{activeCalls.length !== 1 ? 's' : ''} pendente{activeCalls.length !== 1 ? 's' : ''}
             </p>
           </div>
 
           <div className="flex-1 overflow-y-auto p-2.5">
-            {calls.length === 0 ? (
+            {activeCalls.length === 0 ? (
               <div className="flex min-h-64 flex-col items-center justify-center rounded-lg border border-secondary-light bg-secondary-light/40 px-6 py-12 text-center">
                 <CheckCircle2 className="mb-3 text-secondary" size={44} />
                 <p className="text-lg font-bold text-secondary-dark">Nenhuma chamada ativa</p>
@@ -111,7 +114,7 @@ export default function Dashboard() {
               </div>
             ) : (
               <div className="space-y-2">
-                {calls.map(c => (
+                {activeCalls.map(c => (
                   <CallCard key={c.id} call={c} />
                 ))}
               </div>
@@ -120,8 +123,8 @@ export default function Dashboard() {
 
           <div className="border-t border-primary-light bg-primary-light/45 p-2.5">
             <div className="flex justify-between text-[11px] font-bold text-primary-dark">
-              <span>Emergências: {calls.filter(c => c.priority === 'Emergência').length}</span>
-              <span>Normais: {calls.filter(c => c.priority === 'Normal').length}</span>
+              <span>Emergências: {activeCalls.filter(c => c.priority === 'Emergência').length}</span>
+              <span>Normais: {activeCalls.filter(c => c.priority === 'Normal').length}</span>
             </div>
           </div>
         </aside>

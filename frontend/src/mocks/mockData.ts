@@ -85,5 +85,6 @@ export const generateCalls = (beds: Bed[]): Call[] => {
       type: Math.random() > 0.7 ? 'Assistência' : Math.random() > 0.5 ? 'Medicação' : 'Alimentação',
       priority: Math.random() > 0.8 ? 'Emergência' : 'Normal',
       time: new Date(Date.now() - Math.random() * 3600000),
+      source: 'mock',
     }));
 };

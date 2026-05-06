@@ -3,6 +3,7 @@ import Login from '../pages/Login';
 import FirstAccess from '../pages/FirstAccess';
 import SelectUnit from '../pages/SelectUnit';
 import Dashboard from '../pages/Dashboard';
+import Patient from '../pages/Patient';
 
 export const AppRoutes = () => {
   return (
@@ -12,6 +13,7 @@ export const AppRoutes = () => {
         <Route path="/first-access" element={<FirstAccess />} />
         <Route path="/select-unit" element={<SelectUnit />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/patient/:bedId" element={<Patient />} />
       </Routes>
     </BrowserRouter>
   );

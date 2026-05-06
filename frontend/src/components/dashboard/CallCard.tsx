@@ -50,7 +50,7 @@ export function CallCard({ call }: { call: Call }) {
           </div>
         </div>
         <span className={`shrink-0 rounded px-1.5 py-1 text-[10px] font-black ${isEmergency ? 'bg-accent text-white' : 'bg-primary text-white'}`}>
-          {isEmergency ? 'URG' : 'OK'}
+          {call.source === 'patient' ? 'PAC' : isEmergency ? 'URG' : 'OK'}
         </span>
       </div>
     </article>

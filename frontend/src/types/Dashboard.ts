@@ -32,4 +32,5 @@ export interface Call {
   type: string;
   priority: CallPriority;
   time: Date;
+  source?: 'mock' | 'patient';
 }
