@@ -1,4 +1,4 @@
-import { Activity, Bed, Brush, ShieldAlert, TrendingUp } from 'lucide-react';
+import { Activity, Clock3, Repeat2, TrendingUp, Users } from 'lucide-react';
 import type { ElementType } from 'react';
 import { useDashboardStats } from '../../hooks/useDashboardStats';
 import type { Bed as BedType } from '../../types/Dashboard';
@@ -95,9 +95,9 @@ export default function Header({
             icon={TrendingUp}
             progress={stats.occupancy}
           />
-          <StatCard label="Limpeza" value={stats.cleaning} tone="secondary" icon={Brush} />
-          <StatCard label="Bloqueados" value={stats.blocked} tone="accent" icon={Bed} />
-          <StatCard label="Críticos" value={stats.highMews} tone="accent" icon={ShieldAlert} />
+          <StatCard label="TMP" value={stats.averageStayDays} tone="secondary" icon={Clock3} />
+          <StatCard label="Giro leitos" value={stats.bedTurnoverHours} tone="accent" icon={Repeat2} />
+          <StatCard label="Pac./prof." value={stats.patientsPerProfessional} tone="accent" icon={Users} />
         </div>
       </div>
     </header>

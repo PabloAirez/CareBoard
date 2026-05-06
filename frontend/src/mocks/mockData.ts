@@ -1,4 +1,4 @@
-import type { Bed, BedStatus, Call } from '../types/Dashboard';
+import type { Bed, BedStatus, Call, CareLevel } from '../types/Dashboard';
 import type { Vitals } from '../types/Clinical';
 
 const randomVitals = (): Vitals => ({
@@ -21,6 +21,14 @@ const patientNames = [
   'Helena Rodrigues', 'Arthur Gomes', 'Luiza Carvalho', 'Bernardo Martins', 'Sophia Souza',
 ];
 
+const careLevels: CareLevel[] = [
+  'Mínimo',
+  'Intermediário',
+  'Alta dependência',
+  'Semi-intensivo',
+  'Intensivo',
+];
+
 const randomBedStatus = (): BedStatus => {
   const roll = Math.random();
 
@@ -31,6 +39,16 @@ const randomBedStatus = (): BedStatus => {
   return 'Bloqueado';
 };
 
+const randomCareLevel = (): CareLevel => {
+  const roll = Math.random();
+
+  if (roll < 0.32) return 'Mínimo';
+  if (roll < 0.58) return 'Intermediário';
+  if (roll < 0.78) return 'Alta dependência';
+  if (roll < 0.92) return 'Semi-intensivo';
+  return 'Intensivo';
+};
+
 export const generateBeds = (): Bed[] =>
   Array.from({ length: 40 }).map((_, i) => {
     const status = randomBedStatus();
@@ -39,6 +57,9 @@ export const generateBeds = (): Bed[] =>
       return {
         id: i + 1,
         status,
+        turnoverStartedAt: status === 'Bloqueado'
+          ? undefined
+          : new Date(Date.now() - Math.random() * 10 * 3600000),
       };
     }
 
@@ -48,6 +69,7 @@ export const generateBeds = (): Bed[] =>
       patientName: patientNames[i % patientNames.length],
       vitals: randomVitals(),
       admissionDate: new Date(Date.now() - Math.random() * 12 * 86400000),
+      careLevel: careLevels[i % careLevels.length] ?? randomCareLevel(),
     };
   });
 

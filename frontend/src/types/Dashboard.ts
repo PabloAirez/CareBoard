@@ -7,12 +7,21 @@ export type BedStatus =
   | 'Em Limpeza'
   | 'Bloqueado';
 
+export type CareLevel =
+  | 'Mínimo'
+  | 'Intermediário'
+  | 'Alta dependência'
+  | 'Semi-intensivo'
+  | 'Intensivo';
+
 export interface Bed {
   id: number;
   status: BedStatus;
   patientName?: string;
   vitals?: Vitals;
   admissionDate?: Date;
+  careLevel?: CareLevel;
+  turnoverStartedAt?: Date;
 }
 
 export type CallPriority = 'Normal' | 'Emergência';
