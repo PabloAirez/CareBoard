@@ -29,6 +29,8 @@ const careLevels: CareLevel[] = [
   'Intensivo',
 ];
 
+const MOCK_BED_COUNT = 56;
+
 const randomBedStatus = (): BedStatus => {
   const roll = Math.random();
 
@@ -50,7 +52,7 @@ const randomCareLevel = (): CareLevel => {
 };
 
 export const generateBeds = (): Bed[] =>
-  Array.from({ length: 40 }).map((_, i) => {
+  Array.from({ length: MOCK_BED_COUNT }).map((_, i) => {
     const status = randomBedStatus();
 
     if (status !== 'Ocupado') {

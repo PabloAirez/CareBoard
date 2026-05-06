@@ -1,5 +1,6 @@
 import type { Bed } from '../../types/Dashboard';
 import { calculateMEWS, getRiskLevel } from '../../services/mews';
+import  Vital  from './Vital';
 
 export function BedCard({ bed }: { bed: Bed }) {
   const isOccupied = bed.status === 'Ocupado';
@@ -14,8 +15,23 @@ export function BedCard({ bed }: { bed: Bed }) {
 
   const getStayDays = (admissionDate?: Date) => {
     if (!admissionDate) return '--';
+    return `${getStayDaysValue(admissionDate)}d`;
+  };
+
+  const getStayDaysValue = (admissionDate?: Date) => {
+    if (!admissionDate) return 0;
     const diffMs = Date.now() - admissionDate.getTime();
-    return `${Math.max(0, Math.floor(diffMs / 86400000))}d`;
+    return Math.max(0, Math.floor(diffMs / 86400000));
+  };
+
+  const getStayBorderColor = (admissionDate?: Date) => {
+    if (!isOccupied || !admissionDate) return undefined;
+
+    const stayDays = getStayDaysValue(admissionDate);
+
+    if (stayDays < 5) return 'border-secondary';
+    if (stayDays < 7) return 'border-amber-500';
+    return 'border-red-500';
   };
 
   const getConsciousnessLabel = (consciousness: string) => {
@@ -64,11 +80,12 @@ export function BedCard({ bed }: { bed: Bed }) {
   };
 
   const status = getStatusMeta(bed.status);
+  const borderColor = getStayBorderColor(bed.admissionDate) ?? status.border;
 
   return (
     <article
       title={isOccupied ? `${bed.status} | MEWS ${mews} (${risk})` : bed.status}
-      className={`${status.bg} flex min-h-[118px] flex-col rounded-md border-l-4 ${status.border} px-2 py-1.5 shadow-sm ring-1 ring-primary-light/80`}
+      className={`${status.bg} flex min-h-[118px] flex-col rounded-md border-l-4 ${borderColor} px-2 py-1.5 shadow-sm ring-1 ring-primary-light/80`}
     >
       <div className="flex items-center justify-between gap-1">
         <span className="text-[11px] font-black leading-4 text-primary-dark">
@@ -110,11 +127,4 @@ export function BedCard({ bed }: { bed: Bed }) {
   );
 }
 
-function Vital({ label, value, wide = false }: { label: string; value: string | number; wide?: boolean }) {
-  return (
-    <div className={`${wide ? 'col-span-2' : ''} min-w-0 rounded bg-white/85 px-1 py-0.5 ring-1 ring-primary-light/70`}>
-      <div className="whitespace-nowrap font-black leading-3 text-primary-dark">{value}</div>
-      <div className="font-bold leading-3 text-primary-dark/45">{label}</div>
-    </div>
-  );
-}
+
