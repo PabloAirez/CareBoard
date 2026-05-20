@@ -3,12 +3,13 @@ import {
   Bed,
   Bell,
   Droplet,
-  IceCreamBowl,
   Pill,
   Syringe,
   ThermometerSun,
   Toilet,
   Utensils,
+  LucideAirVent,
+  LucideGlassWater
 } from 'lucide-react';
 
 export const patientNeeds = [
@@ -17,11 +18,11 @@ export const patientNeeds = [
   { label: 'Termômetro', icon: ThermometerSun, tone: 'primary' },
   { label: 'Medicamento', icon: Pill, tone: 'primary' },
   { label: 'Estou sentindo dor', icon: Syringe, tone: 'accent' },
-  { label: 'Frio', icon: IceCreamBowl, tone: 'primary' },
+  { label: 'Frio', icon: LucideAirVent, tone: 'primary' },
   { label: 'Calor', icon: ThermometerSun, tone: 'secondary' },
   { label: 'Banheiro', icon: Toilet, tone: 'secondary' },
   { label: 'Levantar', icon: Bed, tone: 'primary' },
   { label: 'Banho', icon: Bath, tone: 'secondary' },
   { label: 'Comer', icon: Utensils, tone: 'secondary' },
-  { label: 'Água', icon: Droplet, tone: 'primary' },
+  { label: 'Água', icon: LucideGlassWater, tone: 'primary' },
 ] as const;

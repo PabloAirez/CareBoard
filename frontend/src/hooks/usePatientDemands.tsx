@@ -31,10 +31,17 @@ export function usePatientDemands(bedId?: number) {
   }, [bedId, demands]);
 
   const createDemand = useCallback((type: string) => {
-    if (!bedId) return;
-    addPatientDemand(bedId, type);
+    if (!bedId) return false;
+
+    const hasActiveDemand = activeDemands.some((demand) => demand.type === type);
+    if (hasActiveDemand) return false;
+
+    const demand = addPatientDemand(bedId, type);
+    if (!demand) return false;
+
     refreshDemands();
-  }, [bedId, refreshDemands]);
+    return true;
+  }, [activeDemands, bedId, refreshDemands]);
 
   const resolveDemand = useCallback((demandId: string) => {
     resolvePatientDemand(demandId);

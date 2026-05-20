@@ -32,6 +32,9 @@ export const getPatientDemands = (): Call[] => {
 
 export const addPatientDemand = (bedId: number, type: string) => {
   const demands = readStoredDemands();
+  const hasActiveDemand = demands.some((demand) => demand.bedId === bedId && demand.type === type);
+  if (hasActiveDemand) return null;
+
   const newDemand: StoredPatientDemand = {
     id: crypto.randomUUID(),
     bedId,
