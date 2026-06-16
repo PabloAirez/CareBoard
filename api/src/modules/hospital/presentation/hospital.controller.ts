@@ -3,8 +3,11 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Patch,
+  ParseIntPipe,
   Post,
 } from '@nestjs/common';
 import { CreateHospitalUseCase } from '../application/use-cases/create-hospital-use-case';
@@ -44,7 +47,7 @@ export class HospitalController {
 
   @Get(':id')
   findOne(
-    @Param('id')
+    @Param('id', ParseIntPipe)
     id: number,
   ) {
     return this.findHospitalById.execute(id);
@@ -52,7 +55,7 @@ export class HospitalController {
 
   @Patch(':id')
   update(
-    @Param('id')
+    @Param('id', ParseIntPipe)
     id: number,
     @Body()
     dto: UpdateHospitalDto,
@@ -61,8 +64,9 @@ export class HospitalController {
   }
 
   @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
   remove(
-    @Param('id')
+    @Param('id', ParseIntPipe)
     id: number,
   ) {
     return this.deleteHospital.execute(id);

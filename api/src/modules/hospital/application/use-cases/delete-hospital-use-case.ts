@@ -5,11 +5,11 @@ import { HospitalRepository } from '../../domain/repositories/hospital.repositor
 export class DeleteHospitalUseCase {
   constructor(private readonly repository: HospitalRepository) {}
 
-  async execute(id: number) {
+  async execute(id: number): Promise<void> {
     const hospital = await this.repository.findById(id);
 
     if (!hospital) {
-      throw new NotFoundException();
+      throw new NotFoundException('Hospital not found');
     }
 
     await this.repository.delete(id);
