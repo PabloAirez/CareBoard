@@ -1,11 +1,18 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { HospitalRepository } from '../../domain/repositories/hospital.repository';
+import { Hospital } from '../../domain/entities/hospital.entity';
 
 @Injectable()
 export class FindHospitalByIdUseCase {
   constructor(private readonly repository: HospitalRepository) {}
 
-  execute(id: number) {
-    return this.repository.findById(id);
+  async execute(id: number): Promise<Hospital> {
+    const hospital = await this.repository.findById(id);
+
+    if (!hospital) {
+      throw new NotFoundException('Hospital not found');
+    }
+
+    return hospital;
   }
 }
