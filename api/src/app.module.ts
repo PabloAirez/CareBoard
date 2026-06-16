@@ -7,6 +7,7 @@ import { HospitalModule } from './modules/hospital/hospital.module';
 import { InternacaoModule } from './modules/internacao/internacao.module';
 import { LeitoModule } from './modules/leito/leito.module';
 import { PacienteModule } from './modules/paciente/paciente.module';
+import { SinaisVitaisModule } from './modules/sinais-vitais/sinais-vitais.module';
 import { StatusLeitoModule } from './modules/status-leito/status-leito.module';
 import { UnidadeModule } from './modules/unidade/unidade.module';
 
@@ -29,6 +30,7 @@ import { UnidadeModule } from './modules/unidade/unidade.module';
     PacienteModule,
     InternacaoModule,
     StatusLeitoModule,
+    SinaisVitaisModule,
   ],
   controllers: [AppController],
   providers: [AppService],
