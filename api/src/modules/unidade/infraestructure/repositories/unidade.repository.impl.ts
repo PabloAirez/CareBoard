@@ -31,6 +31,15 @@ export class UnidadeRepositoryImpl implements UnidadeRepository {
     return unidades.map((unidade) => this.toDomain(unidade));
   }
 
+  async findByHospitalId(hospitalId: number): Promise<Unidade[]> {
+    const unidades = await this.repository.find({
+      where: { hospitalId },
+      order: { nome: 'ASC' },
+    });
+
+    return unidades.map((unidade) => this.toDomain(unidade));
+  }
+
   async findById(id: number): Promise<Unidade | null> {
     const unidade = await this.repository.findOne({
       where: { id },
