@@ -4,6 +4,7 @@ import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DatabaseEntitiesModule } from './modules/database/database-entities.module';
 import { HospitalModule } from './modules/hospital/hospital.module';
+import { UnidadeModule } from './modules/unidade/unidade.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { HospitalModule } from './modules/hospital/hospital.module';
     }),
     DatabaseEntitiesModule,
     HospitalModule,
+    UnidadeModule,
   ],
   controllers: [AppController],
   providers: [AppService],
