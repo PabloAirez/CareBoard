@@ -5,6 +5,8 @@ export abstract class UnidadeRepository {
 
   abstract findAll(): Promise<Unidade[]>;
 
+  abstract findByHospitalId(hospitalId: number): Promise<Unidade[]>;
+
   abstract findById(id: number): Promise<Unidade | null>;
 
   abstract update(unidade: Unidade): Promise<Unidade>;

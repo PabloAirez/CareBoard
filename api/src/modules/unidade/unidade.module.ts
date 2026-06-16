@@ -4,6 +4,7 @@ import { CreateUnidadeUseCase } from './application/use-cases/create-unidade-use
 import { DeleteUnidadeUseCase } from './application/use-cases/delete-unidade-use-case';
 import { FindAllUnidadesUseCase } from './application/use-cases/find-all-unidade-use-case';
 import { FindUnidadeByIdUseCase } from './application/use-cases/find-unidade-by-id-use-case';
+import { FindUnidadesByHospitalIdUseCase } from './application/use-cases/find-unidades-by-hospital-id-use-case';
 import { UpdateUnidadeUseCase } from './application/use-cases/update-unidade-use-case';
 import { UnidadeRepository } from './domain/repositories/unidade.repository';
 import { UnidadeOrmEntity } from './infraestructure/orm/unidade-orm-entity';
@@ -16,6 +17,7 @@ import { UnidadeController } from './presentation/unidade.controller';
   providers: [
     CreateUnidadeUseCase,
     FindAllUnidadesUseCase,
+    FindUnidadesByHospitalIdUseCase,
     FindUnidadeByIdUseCase,
     UpdateUnidadeUseCase,
     DeleteUnidadeUseCase,
