@@ -4,7 +4,10 @@ import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DatabaseEntitiesModule } from './modules/database/database-entities.module';
 import { HospitalModule } from './modules/hospital/hospital.module';
+import { InternacaoModule } from './modules/internacao/internacao.module';
 import { LeitoModule } from './modules/leito/leito.module';
+import { PacienteModule } from './modules/paciente/paciente.module';
+import { StatusLeitoModule } from './modules/status-leito/status-leito.module';
 import { UnidadeModule } from './modules/unidade/unidade.module';
 
 @Module({
@@ -23,6 +26,9 @@ import { UnidadeModule } from './modules/unidade/unidade.module';
     HospitalModule,
     UnidadeModule,
     LeitoModule,
+    PacienteModule,
+    InternacaoModule,
+    StatusLeitoModule,
   ],
   controllers: [AppController],
   providers: [AppService],
