@@ -2,16 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Building2, ArrowRight, Loader2, AlertTriangle } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-
-// 🔥 Mock fallback
-const mockUnits = [
-  { id: 1, name: 'UTI Adulto' },
-  { id: 2, name: 'Clínica Médica' },
-  { id: 3, name: 'Pediatria' },
-  { id: 4, name: 'Centro Cirúrgico' },
-  { id: 5, name: 'Emergência' },
-];
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 interface Unit {
   id: number;
@@ -25,34 +16,23 @@ export default function SelectUnit() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const useMock = import.meta.env.VITE_USE_MOCK === 'true';
-
-    if (useMock) {
-      setUnits(mockUnits);
-      setLoading(false);
-      return;
-    }
-
     fetch(`${API_URL}/api/units`)
-      .then(async (r) => {
-        if (!r.ok) {
+      .then(async (response) => {
+        if (!response.ok) {
           throw new Error('Erro ao buscar unidades');
         }
-        return r.json();
+
+        return response.json();
       })
       .then((data) => {
         setUnits(data);
-        setLoading(false);
+        setError(null);
       })
-      .catch((e) => {
-        console.warn('Fallback para mock:', e.message);
-
-        // 🔥 fallback automático
-        setUnits(mockUnits);
-
-        // aviso leve (não bloqueia)
-        setError('Modo offline: exibindo unidades locais');
-
+      .catch(() => {
+        setUnits([]);
+        setError('Nao foi possivel carregar as unidades do banco.');
+      })
+      .finally(() => {
         setLoading(false);
       });
   }, []);
@@ -64,8 +44,6 @@ export default function SelectUnit() {
   return (
     <div className="min-h-screen bg-primary-light flex items-center justify-center p-6">
       <div className="max-w-2xl w-full">
-
-        {/* Header */}
         <div className="text-center mb-10">
           <div className="bg-primary w-16 h-16 rounded-2xl flex items-center justify-center text-white mx-auto mb-4 shadow-lg shadow-primary/30">
             <Building2 size={32} />
@@ -76,11 +54,10 @@ export default function SelectUnit() {
           </h1>
 
           <p className="text-gray-500 mt-2 text-lg">
-            Selecione sua Unidade de Internação
+            Selecione sua Unidade de Internacao
           </p>
         </div>
 
-        {/* Loading */}
         {loading ? (
           <div className="flex flex-col items-center justify-center py-12 text-primary">
             <Loader2 className="animate-spin w-12 h-12 mb-4" />
@@ -90,8 +67,6 @@ export default function SelectUnit() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
-            {/* Aviso leve */}
             {error && (
               <div className="col-span-full flex items-start gap-3 p-4 bg-yellow-50 border border-yellow-200 rounded-xl text-yellow-700 text-sm">
                 <AlertTriangle className="w-5 h-5 mt-0.5" />
@@ -99,20 +74,19 @@ export default function SelectUnit() {
               </div>
             )}
 
-            {/* Lista */}
             {units.length > 0 ? (
-              units.map((u) => (
+              units.map((unit) => (
                 <button
-                  key={u.id}
-                  data-cy={`unit-${u.id}`}
-                  onClick={() => selectUnit(u.id)}
+                  key={unit.id}
+                  data-cy={`unit-${unit.id}`}
+                  onClick={() => selectUnit(unit.id)}
                   className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm
                   hover:border-primary hover:ring-2 hover:ring-primary-light
                   transition-all group flex justify-between items-center"
                 >
                   <div>
                     <h2 className="text-xl font-bold text-gray-700 group-hover:text-primary transition-colors">
-                      {u.name}
+                      {unit.name}
                     </h2>
                     <p className="text-xs font-medium text-gray-400 mt-1 uppercase tracking-widest">
                       Acessar Painel
@@ -124,7 +98,7 @@ export default function SelectUnit() {
               ))
             ) : (
               <div className="col-span-full text-center text-gray-400 py-10 bg-white rounded-2xl border border-dashed border-gray-300">
-                Nenhuma unidade disponível.
+                Nenhuma unidade disponivel.
               </div>
             )}
           </div>

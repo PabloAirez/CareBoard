@@ -1,15 +1,40 @@
 import { CheckCircle2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { useCareboardMock } from '../hooks/useCareboardMocks';
+import { io } from 'socket.io-client';
 import { BedCard } from '../components/dashboard/BedCard';
 import { CallCard } from '../components/dashboard/CallCard';
 import Header from '../components/dashboard/Header';
+import type { Bed, Call } from '../types/Dashboard';
 
 const BEDS_PER_PAGE = 40;
 const BED_ROTATION_INTERVAL_MS = 30000;
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
+interface PendingDemand {
+  id: number;
+  bedId: number | null;
+  type: string;
+  priority: 'Normal' | 'Emergência';
+  requestedAt: string;
+}
+
+const toCall = (demand: PendingDemand): Call => ({
+  id: String(demand.id),
+  bedId: demand.bedId ?? 0,
+  type: demand.type,
+  priority: demand.priority,
+  time: new Date(demand.requestedAt),
+});
+
+const toBed = (bed: Bed): Bed => ({
+  ...bed,
+  admissionDate: bed.admissionDate ? new Date(bed.admissionDate) : undefined,
+});
 
 export default function Dashboard() {
-  const { beds, calls } = useCareboardMock();
+  const [beds, setBeds] = useState<Bed[]>([]);
+  const [calls, setCalls] = useState<Call[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const [currentBedPage, setCurrentBedPage] = useState(0);
 
   const bedPages = useMemo(() => {
@@ -28,6 +53,52 @@ export default function Dashboard() {
   const visibleEnd = currentBedPage * BEDS_PER_PAGE + visibleBeds.length;
 
   useEffect(() => {
+    const unitId = new URLSearchParams(window.location.search).get('unit');
+    const query = unitId ? `?unitId=${unitId}` : '';
+
+    fetch(`${API_URL}/api/dashboard/beds${query}`)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Dashboard data unavailable');
+        }
+
+        return response.json();
+      })
+      .then((data: Bed[]) => {
+        setBeds(data.map(toBed));
+        setError(null);
+      })
+      .catch(() => {
+        setBeds([]);
+        setError('Nao foi possivel carregar os dados do banco.');
+      });
+  }, []);
+
+  useEffect(() => {
+    const socket = io(API_URL);
+
+    socket.on('demand:pending:list', (pendingDemands: PendingDemand[]) => {
+      setCalls(pendingDemands.map(toCall));
+    });
+
+    socket.on('demand:pending:new', (pendingDemand: PendingDemand) => {
+      setCalls((currentCalls) => {
+        const nextCall = toCall(pendingDemand);
+
+        if (currentCalls.some((call) => call.id === nextCall.id)) {
+          return currentCalls;
+        }
+
+        return [nextCall, ...currentCalls];
+      });
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
     setCurrentBedPage(0);
   }, [beds]);
 
@@ -35,7 +106,7 @@ export default function Dashboard() {
     if (pageCount <= 1) return;
 
     const interval = setInterval(() => {
-      setCurrentBedPage(page => (page + 1) % pageCount);
+      setCurrentBedPage((page) => (page + 1) % pageCount);
     }, BED_ROTATION_INTERVAL_MS);
 
     return () => clearInterval(interval);
@@ -46,17 +117,27 @@ export default function Dashboard() {
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'ArrowRight') {
-        setCurrentBedPage(page => (page + 1) % pageCount);
+        setCurrentBedPage((page) => (page + 1) % pageCount);
       }
 
       if (event.key === 'ArrowLeft') {
-        setCurrentBedPage(page => (page - 1 + pageCount) % pageCount);
+        setCurrentBedPage((page) => (page - 1 + pageCount) % pageCount);
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [pageCount]);
+
+  const createDemand = async (admissionId: number, type: string) => {
+    await fetch(`${API_URL}/api/demands`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ admissionId, type }),
+    });
+  };
 
   return (
     <div className="h-screen overflow-hidden bg-primary-light/40 text-primary-dark">
@@ -69,7 +150,7 @@ export default function Dashboard() {
               <div>
                 <h2 className="text-base font-bold text-primary-dark">Mapa de leitos</h2>
                 <p className="text-xs font-medium text-primary-dark/60">
-                  Monitoramento operacional da unidade
+                  {error ?? 'Monitoramento operacional da unidade'}
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -79,14 +160,14 @@ export default function Dashboard() {
                   </span>
                 )}
                 <span className="rounded-md bg-white px-2.5 py-1.5 text-xs font-bold text-primary shadow-sm ring-1 ring-primary-light">
-                  Página {currentBedPage + 1}/{pageCount}
+                  Pagina {currentBedPage + 1}/{pageCount}
                 </span>
               </div>
             </div>
 
-            <div className="grid grid-cols-[repeat(auto-fit,minmax(104px,1fr))] gap-1.5">
-              {visibleBeds.map(b => (
-                <BedCard key={b.id} bed={b} />
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(118px,1fr))] gap-1.5">
+              {visibleBeds.map((bed) => (
+                <BedCard key={bed.id} bed={bed} onCreateDemand={createDemand} />
               ))}
             </div>
           </section>
@@ -111,8 +192,8 @@ export default function Dashboard() {
               </div>
             ) : (
               <div className="space-y-2">
-                {calls.map(c => (
-                  <CallCard key={c.id} call={c} />
+                {calls.map((call) => (
+                  <CallCard key={call.id} call={call} />
                 ))}
               </div>
             )}
@@ -120,8 +201,8 @@ export default function Dashboard() {
 
           <div className="border-t border-primary-light bg-primary-light/45 p-2.5">
             <div className="flex justify-between text-[11px] font-bold text-primary-dark">
-              <span>Emergências: {calls.filter(c => c.priority === 'Emergência').length}</span>
-              <span>Normais: {calls.filter(c => c.priority === 'Normal').length}</span>
+              <span>Emergencias: {calls.filter((call) => call.priority === 'Emergência').length}</span>
+              <span>Normais: {calls.filter((call) => call.priority === 'Normal').length}</span>
             </div>
           </div>
         </aside>

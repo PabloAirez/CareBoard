@@ -16,10 +16,12 @@ export type CareLevel =
 
 export interface Bed {
   id: number;
+  number?: string;
   status: BedStatus;
-  patientName?: string;
-  vitals?: Vitals;
-  admissionDate?: Date;
+  admissionId?: number | null;
+  patientName?: string | null;
+  vitals?: Vitals | null;
+  admissionDate?: Date | string | null;
   careLevel?: CareLevel;
   turnoverStartedAt?: Date;
 }

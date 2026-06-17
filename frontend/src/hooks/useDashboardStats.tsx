@@ -16,14 +16,22 @@ const formatNumber = (value: number, digits = 1) => {
   return value.toFixed(digits).replace('.', ',');
 };
 
+const toDate = (value?: Date | string | null) => {
+  if (!value) return null;
+  return value instanceof Date ? value : new Date(value);
+};
+
 export function useDashboardStats(beds: Bed[]) {
   return useMemo(() => {
-    const occupiedBeds = beds.filter(b => b.status === 'Ocupado');
-    const turnoverBeds = beds.filter(b => b.status !== 'Ocupado' && b.status !== 'Bloqueado' && b.turnoverStartedAt);
+    const occupiedBeds = beds.filter((bed) => bed.status === 'Ocupado');
+    const turnoverBeds = beds.filter(
+      (bed) => bed.status !== 'Ocupado' && bed.status !== 'Bloqueado' && bed.turnoverStartedAt,
+    );
 
     const stayDaysTotal = occupiedBeds.reduce((total, bed) => {
-      if (!bed.admissionDate) return total;
-      return total + Math.max(0, (Date.now() - bed.admissionDate.getTime()) / 86400000);
+      const admissionDate = toDate(bed.admissionDate);
+      if (!admissionDate) return total;
+      return total + Math.max(0, (Date.now() - admissionDate.getTime()) / 86400000);
     }, 0);
 
     const turnoverHoursTotal = turnoverBeds.reduce((total, bed) => {
