@@ -20,6 +20,9 @@ export class UsuarioOrmEntity {
   @Column({ length: 255 })
   nome!: string;
 
+  @Column({ length: 255, default: '123456' })
+  senha!: string;
+
   @Column({ name: 'tipo_usuario_id', type: 'int' })
   tipoUsuarioId!: number;
 

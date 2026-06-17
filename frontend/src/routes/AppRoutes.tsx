@@ -3,15 +3,20 @@ import Login from '../pages/Login';
 import FirstAccess from '../pages/FirstAccess';
 import SelectUnit from '../pages/SelectUnit';
 import Dashboard from '../pages/Dashboard';
+import Patient from '../pages/Patient';
+import { ProtectedRoute } from './ProtectedRoute';
 
 export const AppRoutes = () => {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Login />} />
-        <Route path="/first-access" element={<FirstAccess />} />
-        <Route path="/select-unit" element={<SelectUnit />} />
-        <Route path="/dashboard" element={<Dashboard />} />
+        <Route element={<ProtectedRoute />}>
+          <Route path="/first-access" element={<FirstAccess />} />
+          <Route path="/select-unit" element={<SelectUnit />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/patient" element={<Patient />} />
+        </Route>
       </Routes>
     </BrowserRouter>
   );
