@@ -10,7 +10,9 @@ import { StatusDemandaOrmEntity } from '../status-demanda/infraestructure/orm/st
 import { StatusInternacaoOrmEntity } from '../status-internacao/infraestructure/orm/status-internacao-orm-entity';
 import { StatusLeitoOrmEntity } from '../status-leito/infraestructure/orm/status-leito-orm-entity';
 import { TipoDemandaOrmEntity } from '../tipo-demanda/infraestructure/orm/tipo-demanda-orm-entity';
+import { TipoUsuarioOrmEntity } from '../tipo-usuario/infraestructure/orm/tipo-usuario-orm-entity';
 import { UnidadeOrmEntity } from '../unidade/infraestructure/orm/unidade-orm-entity';
+import { UsuarioOrmEntity } from '../usuario/infraestructure/orm/usuario-orm-entity';
 import { CareboardSeed } from './careboard.seed';
 
 @Module({
@@ -25,8 +27,10 @@ import { CareboardSeed } from './careboard.seed';
       StatusLeitoOrmEntity,
       StatusInternacaoOrmEntity,
       TipoDemandaOrmEntity,
+      TipoUsuarioOrmEntity,
       StatusDemandaOrmEntity,
       DemandaOrmEntity,
+      UsuarioOrmEntity,
     ]),
   ],
   providers: [CareboardSeed],

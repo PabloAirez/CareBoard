@@ -1,6 +1,6 @@
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 import { DemandaOrmEntity } from '../demanda/infraestructure/orm/demanda-orm-entity';
 import { HospitalOrmEntity } from '../hospital/infraestructure/orm/hospital-orm-entity';
 import { InternacaoOrmEntity } from '../internacao/infraestructure/orm/internacao-orm-entity';
@@ -11,7 +11,9 @@ import { StatusDemandaOrmEntity } from '../status-demanda/infraestructure/orm/st
 import { StatusInternacaoOrmEntity } from '../status-internacao/infraestructure/orm/status-internacao-orm-entity';
 import { StatusLeitoOrmEntity } from '../status-leito/infraestructure/orm/status-leito-orm-entity';
 import { TipoDemandaOrmEntity } from '../tipo-demanda/infraestructure/orm/tipo-demanda-orm-entity';
+import { TipoUsuarioOrmEntity } from '../tipo-usuario/infraestructure/orm/tipo-usuario-orm-entity';
 import { UnidadeOrmEntity } from '../unidade/infraestructure/orm/unidade-orm-entity';
+import { UsuarioOrmEntity } from '../usuario/infraestructure/orm/usuario-orm-entity';
 
 const bedStatuses = [
   'livre',
@@ -64,19 +66,21 @@ export class CareboardSeed implements OnApplicationBootstrap {
     private readonly statusDemandaRepository: Repository<StatusDemandaOrmEntity>,
     @InjectRepository(DemandaOrmEntity)
     private readonly demandaRepository: Repository<DemandaOrmEntity>,
+    @InjectRepository(TipoUsuarioOrmEntity)
+    private readonly tipoUsuarioRepository: Repository<TipoUsuarioOrmEntity>,
+    @InjectRepository(UsuarioOrmEntity)
+    private readonly usuarioRepository: Repository<UsuarioOrmEntity>,
   ) {}
 
   async onApplicationBootstrap() {
-    const existingBeds = await this.leitoRepository.count();
-
-    if (existingBeds > 0) {
-      return;
-    }
-
     const statuses = await this.seedStatuses();
     const hospital = await this.seedHospital();
     const seededUnits = await this.seedUnits(hospital.id);
-    const seededBeds = await this.seedBeds(seededUnits, statuses);
+    await this.seedBeds(seededUnits, statuses);
+    const seededBeds = await this.leitoRepository.find({
+      relations: { unidade: true },
+      order: { numero: 'ASC' },
+    });
     const seededPatients = await this.seedPatients();
     const seededAdmissions = await this.seedAdmissions(
       seededBeds,
@@ -85,6 +89,7 @@ export class CareboardSeed implements OnApplicationBootstrap {
       statuses.ativa.id,
     );
 
+    await this.seedUsers(hospital.id, seededBeds);
     await this.seedVitalSigns(seededAdmissions);
     await this.seedDemands(seededAdmissions);
   }
@@ -116,6 +121,13 @@ export class CareboardSeed implements OnApplicationBootstrap {
     for (const descricao of demandTypes) {
       await this.findOrCreate(this.tipoDemandaRepository, { descricao });
     }
+
+    await this.findOrCreate(this.tipoUsuarioRepository, {
+      descricao: 'enfermeiro',
+    });
+    await this.findOrCreate(this.tipoUsuarioRepository, {
+      descricao: 'paciente',
+    });
 
     return {
       ativa,
@@ -165,13 +177,14 @@ export class CareboardSeed implements OnApplicationBootstrap {
       statuses.bloqueado,
     ];
 
-    for (const unidade of seededUnits) {
+    for (const [unitIndex, unidade] of seededUnits.entries()) {
       for (let index = 1; index <= 8; index += 1) {
         const status = statusCycle[(index - 1) % statusCycle.length];
+        const bedNumber = `${unitIndex + 1}${index.toString().padStart(2, '0')}`;
 
         seededBeds.push(
           await this.findOrCreate(this.leitoRepository, {
-            numero: `${unidade.id}${index.toString().padStart(2, '0')}`,
+            numero: bedNumber,
             unidadeId: unidade.id,
             statusLeitoId: status.id,
           }),
@@ -205,16 +218,30 @@ export class CareboardSeed implements OnApplicationBootstrap {
     occupiedStatusId: number,
     statusInternacaoId: number,
   ) {
-    const occupiedBeds = beds
-      .filter((bed) => bed.statusLeitoId === occupiedStatusId)
-      .slice(0, patients.length);
+    const occupiedBeds = beds.slice(0, patients.length);
     const admissions: InternacaoOrmEntity[] = [];
 
     for (let index = 0; index < occupiedBeds.length; index += 1) {
+      const bed = occupiedBeds[index];
+      const existingActiveAdmission = await this.internacaoRepository.findOne({
+        where: { leitoId: bed.id, dataSaida: IsNull() },
+      });
+
+      if (bed.statusLeitoId !== occupiedStatusId) {
+        await this.leitoRepository.update(bed.id, {
+          statusLeitoId: occupiedStatusId,
+        });
+      }
+
+      if (existingActiveAdmission) {
+        admissions.push(existingActiveAdmission);
+        continue;
+      }
+
       admissions.push(
         await this.findOrCreate(this.internacaoRepository, {
           pacienteId: patients[index].id,
-          leitoId: occupiedBeds[index].id,
+          leitoId: bed.id,
           dataEntrada: new Date(Date.now() - (index + 1) * 86400000),
           dataSaida: null,
           statusInternacaoId,
@@ -225,9 +252,55 @@ export class CareboardSeed implements OnApplicationBootstrap {
     return admissions;
   }
 
+  private async seedUsers(hospitalId: number, beds: LeitoOrmEntity[]) {
+    const nurseType = await this.findOrCreate(this.tipoUsuarioRepository, {
+      descricao: 'enfermeiro',
+    });
+    const patientType = await this.findOrCreate(this.tipoUsuarioRepository, {
+      descricao: 'paciente',
+    });
+
+    await this.findOrCreate(this.usuarioRepository, {
+      nome: 'hrsj',
+      senha: '123456',
+      tipoUsuarioId: nurseType.id,
+      hospitalId,
+    });
+
+    for (const bed of beds) {
+      const existingUser = await this.usuarioRepository.findOne({
+        where: { nome: bed.numero },
+      });
+
+      if (existingUser) {
+        await this.usuarioRepository.update(existingUser.id, {
+          senha: existingUser.senha || '123456',
+          tipoUsuarioId: patientType.id,
+          hospitalId,
+        });
+      } else {
+        await this.usuarioRepository.save(
+          this.usuarioRepository.create({
+            nome: bed.numero,
+            senha: '123456',
+            tipoUsuarioId: patientType.id,
+            hospitalId,
+          }),
+        );
+      }
+    }
+  }
+
   private async seedVitalSigns(admissions: InternacaoOrmEntity[]) {
     for (let index = 0; index < admissions.length; index += 1) {
       const admission = admissions[index];
+      const existingVitals = await this.sinaisVitaisRepository.findOne({
+        where: { pacienteId: admission.pacienteId },
+      });
+
+      if (existingVitals) {
+        continue;
+      }
 
       await this.findOrCreate(this.sinaisVitaisRepository, {
         pacienteId: admission.pacienteId,
@@ -261,6 +334,19 @@ export class CareboardSeed implements OnApplicationBootstrap {
     const types = [assistance, medication, emergency];
 
     for (let index = 0; index < Math.min(5, admissions.length); index += 1) {
+      const existingDemand = await this.demandaRepository.findOne({
+        where: {
+          internacaoId: admissions[index].id,
+          tipoDemandaId: types[index % types.length].id,
+          statusDemandaId: pendingStatus.id,
+          dataHoraAtendimento: IsNull(),
+        },
+      });
+
+      if (existingDemand) {
+        continue;
+      }
+
       await this.findOrCreate(this.demandaRepository, {
         internacaoId: admissions[index].id,
         tipoDemandaId: types[index % types.length].id,

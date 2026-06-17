@@ -1,11 +1,12 @@
-import './App.css'
-import AppRoutes  from "./routes/AppRoutes";
+import './App.css';
+import { AuthProvider } from './contexts/AuthContext';
+import AppRoutes from './routes/AppRoutes';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
   return (
-  <>
+    <AuthProvider>
       <AppRoutes />
 
       <ToastContainer
@@ -14,8 +15,8 @@ function App() {
         theme="colored"
       />
 
-      </>
-  )
+    </AuthProvider>
+  );
 }
 
 export default App;

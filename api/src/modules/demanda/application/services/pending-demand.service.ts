@@ -8,6 +8,7 @@ import { CreatePatientDemandDto } from '../../presentation/dto/create-patient-de
 import { PendingDemandDto } from '../../presentation/realtime/pending-demand.dto';
 
 const PENDING_STATUS = 'pendente';
+const COMPLETED_STATUS = 'atendida';
 
 @Injectable()
 export class PendingDemandService {
@@ -46,7 +47,7 @@ export class PendingDemandService {
         atendidoPorUsuarioId: IsNull(),
       },
       relations: {
-        internacao: { paciente: true },
+        internacao: { paciente: true, leito: true },
         tipoDemanda: true,
         statusDemanda: true,
       },
@@ -58,11 +59,36 @@ export class PendingDemandService {
     return demandas.map((demanda) => this.toDto(demanda));
   }
 
+  async completeDemand(id: number): Promise<PendingDemandDto | null> {
+    const demanda = await this.demandaRepository.findOne({
+      where: { id },
+      relations: {
+        internacao: { paciente: true, leito: true },
+        tipoDemanda: true,
+        statusDemanda: true,
+      },
+    });
+
+    if (!demanda) {
+      return null;
+    }
+
+    const completedStatus = await this.findOrCreateStatusDemanda(COMPLETED_STATUS);
+
+    demanda.statusDemandaId = completedStatus.id;
+    demanda.statusDemanda = completedStatus;
+    demanda.dataHoraAtendimento = new Date();
+
+    const saved = await this.demandaRepository.save(demanda);
+
+    return this.toDto(saved);
+  }
+
   private async findPendingById(id: number): Promise<PendingDemandDto | null> {
     const demanda = await this.demandaRepository.findOne({
       where: { id },
       relations: {
-        internacao: { paciente: true },
+        internacao: { paciente: true, leito: true },
         tipoDemanda: true,
         statusDemanda: true,
       },
@@ -108,6 +134,7 @@ export class PendingDemandService {
       id: demanda.id,
       admissionId: demanda.internacaoId,
       bedId: demanda.internacao?.leitoId ?? null,
+      bedNumber: demanda.internacao?.leito?.numero ?? null,
       patientId: demanda.internacao?.pacienteId ?? null,
       patientName: demanda.internacao?.paciente?.nome ?? null,
       type,

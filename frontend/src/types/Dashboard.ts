@@ -31,6 +31,7 @@ export type CallPriority = 'Normal' | 'Emergência';
 export interface Call {
   id: string;
   bedId: number;
+  bedNumber?: string | null;
   type: string;
   priority: CallPriority;
   time: Date;

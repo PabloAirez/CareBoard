@@ -13,6 +13,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 interface PendingDemand {
   id: number;
   bedId: number | null;
+  bedNumber: string | null;
   type: string;
   priority: 'Normal' | 'Emergência';
   requestedAt: string;
@@ -21,6 +22,7 @@ interface PendingDemand {
 const toCall = (demand: PendingDemand): Call => ({
   id: String(demand.id),
   bedId: demand.bedId ?? 0,
+  bedNumber: demand.bedNumber,
   type: demand.type,
   priority: demand.priority,
   time: new Date(demand.requestedAt),

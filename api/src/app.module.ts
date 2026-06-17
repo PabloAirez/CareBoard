@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AuthModule } from './modules/auth/auth.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { DatabaseEntitiesModule } from './modules/database/database-entities.module';
 import { DemandaModule } from './modules/demanda/demanda.module';
@@ -28,6 +29,7 @@ import { UnidadeModule } from './modules/unidade/unidade.module';
     }),
     DatabaseEntitiesModule,
     SeedModule,
+    AuthModule,
     DashboardModule,
     DemandaModule,
     HospitalModule,
