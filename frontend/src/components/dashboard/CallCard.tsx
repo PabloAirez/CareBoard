@@ -28,6 +28,7 @@ export function CallCard({ call }: { call: Call }) {
   };
 
   const TypeIcon = getTypeIcon(call.type);
+  const bedLabel = call.bedNumber ?? call.bedId.toString().padStart(2, '0');
   const tone = isEmergency
     ? 'border-accent bg-accent-light/65 text-accent-dark'
     : 'border-primary bg-primary-light/65 text-primary-dark';
@@ -41,7 +42,7 @@ export function CallCard({ call }: { call: Call }) {
           </div>
           <div className="min-w-0">
             <p className="truncate text-sm font-black text-primary-dark">
-              L{call.bedId.toString().padStart(2, '0')} | {call.type}
+              L{bedLabel} | {call.type}
             </p>
             <p className="flex items-center gap-1 text-[11px] font-bold text-primary-dark/60">
               <Clock3 size={12} />

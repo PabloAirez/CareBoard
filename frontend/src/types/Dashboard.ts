@@ -16,10 +16,12 @@ export type CareLevel =
 
 export interface Bed {
   id: number;
+  number?: string;
   status: BedStatus;
-  patientName?: string;
-  vitals?: Vitals;
-  admissionDate?: Date;
+  admissionId?: number | null;
+  patientName?: string | null;
+  vitals?: Vitals | null;
+  admissionDate?: Date | string | null;
   careLevel?: CareLevel;
   turnoverStartedAt?: Date;
 }
@@ -29,6 +31,7 @@ export type CallPriority = 'Normal' | 'Emergência';
 export interface Call {
   id: string;
   bedId: number;
+  bedNumber?: string | null;
   type: string;
   priority: CallPriority;
   time: Date;
