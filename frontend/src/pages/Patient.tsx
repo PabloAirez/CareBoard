@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { ActiveDemandList } from '../components/patient/ActiveDemandList';
 import { NeedCard } from '../components/patient/NeedCard';
@@ -8,7 +8,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { usePatientDemands } from '../hooks/usePatientDemands';
 
 const DEMAND_COOLDOWN_MS = 3 * 60 * 1000;
-const getCooldownStorageKey = (admissionId: number) => `careboard:patient-demand-cooldown:${admissionId}`;
+const getCooldownStorageKey = (admissionId?: number | null, bedId?: number | null) =>
+  `careboard:patient-demand-cooldown:${admissionId ?? bedId ?? 0}`;
 
 const formatCooldown = (milliseconds: number) => {
   const totalSeconds = Math.max(0, Math.ceil(milliseconds / 1000));
@@ -22,7 +23,11 @@ export default function Patient() {
   const { user } = useAuth();
   const [now, setNow] = useState(() => new Date());
   const [cooldownUntil, setCooldownUntil] = useState(0);
-  const { demands, createDemand, completeDemand } = usePatientDemands(user?.admissionId, user?.bedId);
+  const { demands, createDemand, completeDemand } = usePatientDemands(
+    user?.admissionId ?? undefined,
+    user?.bedId ?? undefined,
+    user?.bedNumber ?? user?.name ?? undefined,
+  );
 
   useEffect(() => {
     const interval = setInterval(() => setNow(new Date()), 1000);
@@ -30,17 +35,19 @@ export default function Patient() {
   }, []);
 
   useEffect(() => {
-    if (!user?.admissionId) return;
+    if (!user) return;
 
-    const storedCooldown = Number(localStorage.getItem(getCooldownStorageKey(user.admissionId)));
+    const key = getCooldownStorageKey(user.admissionId, user.bedId);
+    const storedCooldown = Number(localStorage.getItem(key));
     setCooldownUntil(Number.isFinite(storedCooldown) ? storedCooldown : 0);
-  }, [user?.admissionId]);
+  }, [user]);
 
-  if (!user || user.role !== 'paciente' || !user.admissionId) {
+  const isBedUser = user?.role === 'leito' || user?.role === 'paciente';
+
+  if (!user || !isBedUser) {
     return <Navigate to="/" replace />;
   }
 
-  const admissionId = user.admissionId;
   const cooldownRemaining = Math.max(0, cooldownUntil - now.getTime());
   const isCooldownActive = cooldownRemaining > 0;
 
@@ -52,7 +59,8 @@ export default function Patient() {
 
     const clickedAt = Date.now();
     const nextCooldownUntil = clickedAt + DEMAND_COOLDOWN_MS;
-    localStorage.setItem(getCooldownStorageKey(admissionId), String(nextCooldownUntil));
+    const key = getCooldownStorageKey(user.admissionId, user.bedId);
+    localStorage.setItem(key, String(nextCooldownUntil));
     setNow(new Date(clickedAt));
     setCooldownUntil(nextCooldownUntil);
   };
@@ -64,7 +72,11 @@ export default function Patient() {
   return (
     <main className="min-h-screen bg-primary-light/40 p-3 text-primary-dark sm:p-4">
       <div className="mx-auto flex max-w-5xl flex-col gap-3">
-        <PatientHeader bedNumber={user.bedNumber ?? ''} patientName={user.patientName} now={now} />
+        <PatientHeader
+          bedNumber={user.bedNumber ?? user.name}
+          patientName={user.patientName}
+          now={now}
+        />
 
         <ActiveDemandList demands={demands} onComplete={(demandId) => void handleCompleteDemand(demandId)} />
 

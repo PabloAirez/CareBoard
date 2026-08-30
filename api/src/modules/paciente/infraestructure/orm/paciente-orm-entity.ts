@@ -1,4 +1,4 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+﻿import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { InternacaoOrmEntity } from '../../../internacao/infraestructure/orm/internacao-orm-entity';
 import { SinaisVitaisOrmEntity } from '../../../sinais-vitais/infraestructure/orm/sinais-vitais-orm-entity';
 
@@ -18,6 +18,9 @@ export class PacienteOrmEntity {
 
   @Column({ name: 'tem_doenca_contagiosa', type: 'boolean', default: false })
   temDoencaContagiosa!: boolean;
+
+  @Column({ name: 'id_sistema_externo', type: 'varchar', length: 100, nullable: true })
+  idSistemaExterno?: string | null;
 
   @OneToMany(() => InternacaoOrmEntity, (internacao) => internacao.paciente)
   internacoes?: InternacaoOrmEntity[];

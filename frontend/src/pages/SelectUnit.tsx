@@ -1,12 +1,14 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Building2, ArrowRight, Loader2, AlertTriangle } from 'lucide-react';
+import { io } from 'socket.io-client';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 interface Unit {
   id: number;
   name: string;
+  idSistemaExterno?: string | null;
 }
 
 export default function SelectUnit() {
@@ -15,26 +17,47 @@ export default function SelectUnit() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    fetch(`${API_URL}/api/units`)
-      .then(async (response) => {
-        if (!response.ok) {
-          throw new Error('Erro ao buscar unidades');
-        }
+  const loadUnits = async (showLoadingState = false) => {
+    if (showLoadingState) setLoading(true);
+    try {
+      const response = await fetch(`${API_URL}/api/units`);
+      if (!response.ok) {
+        throw new Error('Erro ao buscar unidades');
+      }
 
-        return response.json();
-      })
-      .then((data) => {
-        setUnits(data);
-        setError(null);
-      })
-      .catch(() => {
-        setUnits([]);
-        setError('Nao foi possivel carregar as unidades do banco.');
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+      const data = await response.json();
+      setUnits(data);
+      setError(null);
+    } catch {
+      setError('Nao foi possivel carregar as unidades do banco.');
+    } finally {
+      if (showLoadingState) setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadUnits(true);
+
+    // Polling periodico a cada 5 segundos para detectar novas unidades importadas do SIGH
+    const interval = setInterval(() => {
+      loadUnits(false);
+    }, 5000);
+
+    // Conexao WebSocket em tempo real para sincronizacao instantanea
+    const socket = io(API_URL);
+
+    socket.on('unidades:atualizado', () => {
+      loadUnits(false);
+    });
+
+    socket.on('sigh:sync-complete', () => {
+      loadUnits(false);
+    });
+
+    return () => {
+      clearInterval(interval);
+      socket.disconnect();
+    };
   }, []);
 
   const selectUnit = (id: number) => {

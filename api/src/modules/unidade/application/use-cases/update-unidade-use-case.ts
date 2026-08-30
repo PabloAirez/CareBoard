@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+﻿import { Injectable, NotFoundException } from '@nestjs/common';
 import { Unidade } from '../../domain/entities/unidade.entity';
 import { UnidadeRepository } from '../../domain/repositories/unidade.repository';
 import { UpdateUnidadeDto } from '../../presentation/dto/update-unidade.dto';
@@ -20,6 +20,10 @@ export class UpdateUnidadeUseCase {
 
     if (dto.hospitalId !== undefined) {
       unidade.hospitalId = dto.hospitalId;
+    }
+
+    if (dto.idSistemaExterno !== undefined || dto.externalSystemId !== undefined) {
+      unidade.idSistemaExterno = dto.idSistemaExterno || dto.externalSystemId || null;
     }
 
     return this.repository.update(unidade);

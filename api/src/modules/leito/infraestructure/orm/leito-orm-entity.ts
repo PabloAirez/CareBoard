@@ -1,4 +1,4 @@
-import {
+﻿import {
   Column,
   Entity,
   Index,
@@ -26,6 +26,9 @@ export class LeitoOrmEntity {
 
   @Column({ name: 'status_leito_id', type: 'int' })
   statusLeitoId!: number;
+
+  @Column({ name: 'id_sistema_externo', type: 'varchar', length: 100, nullable: true })
+  idSistemaExterno?: string | null;
 
   @ManyToOne(() => UnidadeOrmEntity, (unidade) => unidade.leitos, {
     onDelete: 'CASCADE',
