@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Lock, User, Activity, ArrowRight } from 'lucide-react';
 import { toast } from 'react-toastify';
@@ -18,7 +18,8 @@ export default function Login() {
   useEffect(() => {
     if (!isAuthenticated || !user) return;
 
-    navigate(user.role === 'paciente' ? '/patient' : '/select-unit', { replace: true });
+    const isBedUser = user.role === 'paciente' || user.role === 'leito';
+    navigate(isBedUser ? '/patient' : '/select-unit', { replace: true });
   }, [isAuthenticated, navigate, user]);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -38,10 +39,12 @@ export default function Login() {
         throw new Error('Invalid credentials');
       }
 
-      const user = await response.json() as AuthUser;
-      login(user);
+      const loggedUser = (await response.json()) as AuthUser;
+      login(loggedUser);
 
-      if (user.role === 'paciente') {
+      const isBedUser = loggedUser.role === 'paciente' || loggedUser.role === 'leito';
+
+      if (isBedUser) {
         navigate('/patient');
         return;
       }
@@ -99,7 +102,7 @@ export default function Login() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 className="block w-full pl-11 pr-4 py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-primary-light/50 focus:bg-white/10 focus:border-primary focus:ring-1 focus:ring-primary transition-all outline-none"
-                placeholder="Usuario"
+                placeholder="Usuario (ex: 999-A)"
                 required
               />
             </div>

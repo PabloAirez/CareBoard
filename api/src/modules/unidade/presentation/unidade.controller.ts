@@ -1,4 +1,4 @@
-import {
+﻿import {
   Body,
   Controller,
   Delete,
@@ -83,6 +83,8 @@ export class UnidadeController {
       id: unidade.id,
       name: unidade.nome,
       hospitalId: unidade.hospitalId,
+      idSistemaExterno: unidade.idSistemaExterno ?? null,
+      externalSystemId: unidade.idSistemaExterno ?? null,
     };
   }
 }

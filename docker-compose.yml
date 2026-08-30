@@ -1,6 +1,4 @@
-version: '3.9'
-
-services:
+﻿services:
   postgres:
     image: postgres:16
     container_name: careboard_postgres
@@ -29,6 +27,7 @@ services:
       DB_USERNAME: postgres
       DB_PASSWORD: postgres
       DB_DATABASE: careboard
+      ENCRYPTION_KEY: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
     volumes:
       - ./api:/app
     command: npm run start:dev
@@ -49,4 +48,3 @@ services:
 
 volumes:
   postgres_data:
-  frontend_node_modules:

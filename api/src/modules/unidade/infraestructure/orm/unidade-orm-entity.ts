@@ -1,4 +1,4 @@
-import {
+﻿import {
   Column,
   Entity,
   JoinColumn,
@@ -19,6 +19,9 @@ export class UnidadeOrmEntity {
 
   @Column({ name: 'hospital_id', type: 'int' })
   hospitalId!: number;
+
+  @Column({ name: 'id_sistema_externo', type: 'varchar', length: 100, nullable: true })
+  idSistemaExterno?: string | null;
 
   @ManyToOne(() => HospitalOrmEntity, (hospital) => hospital.unidades, {
     onDelete: 'CASCADE',

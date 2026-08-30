@@ -1,4 +1,4 @@
-import { CheckCircle2 } from 'lucide-react';
+﻿import { CheckCircle2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { io } from 'socket.io-client';
 import { BedCard } from '../components/dashboard/BedCard';
@@ -12,8 +12,10 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 interface PendingDemand {
   id: number;
+  admissionId: number;
   bedId: number | null;
   bedNumber: string | null;
+  unitId?: number | null;
   type: string;
   priority: 'Normal' | 'Emergência';
   requestedAt: string;
@@ -54,7 +56,7 @@ export default function Dashboard() {
   const visibleStart = currentBedPage * BEDS_PER_PAGE + 1;
   const visibleEnd = currentBedPage * BEDS_PER_PAGE + visibleBeds.length;
 
-  useEffect(() => {
+  const fetchBeds = () => {
     const unitId = new URLSearchParams(window.location.search).get('unit');
     const query = unitId ? `?unitId=${unitId}` : '';
 
@@ -74,10 +76,32 @@ export default function Dashboard() {
         setBeds([]);
         setError('Nao foi possivel carregar os dados do banco.');
       });
+  };
+
+  const fetchPendingDemands = () => {
+    const unitId = new URLSearchParams(window.location.search).get('unit');
+    const query = unitId ? `?unitId=${unitId}` : '';
+
+    fetch(`${API_URL}/api/demands/pending${query}`)
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data: PendingDemand[]) => {
+        setCalls(data.map(toCall));
+      })
+      .catch(() => {
+        setCalls([]);
+      });
+  };
+
+  useEffect(() => {
+    fetchBeds();
+    fetchPendingDemands();
   }, []);
 
   useEffect(() => {
-    const socket = io(API_URL);
+    const unitId = new URLSearchParams(window.location.search).get('unit');
+    const socket = io(API_URL, {
+      query: { unitId },
+    });
 
     socket.on('demand:pending:list', (pendingDemands: PendingDemand[]) => {
       setCalls(pendingDemands.map(toCall));
@@ -93,6 +117,19 @@ export default function Dashboard() {
 
         return [nextCall, ...currentCalls];
       });
+    });
+
+    socket.on('sigh:sync-complete', () => {
+      fetchBeds();
+      fetchPendingDemands();
+    });
+
+    socket.on('leitos:atualizado', () => {
+      fetchBeds();
+    });
+
+    socket.on('internacoes:atualizado', () => {
+      fetchBeds();
     });
 
     return () => {

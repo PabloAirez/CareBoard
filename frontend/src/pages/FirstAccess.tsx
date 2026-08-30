@@ -1,8 +1,10 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Settings, Activity, Hospital } from 'lucide-react';
 import { toast } from 'react-toastify';
 import SighConfigure from './../components/SighConfigure';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 export default function FirstAccess() {
   const [hospitalName, setHospitalName] = useState('');
@@ -13,35 +15,34 @@ export default function FirstAccess() {
   const handleSubmit = async (data: any) => {
     setLoading(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/config/setup`, {
+      const res = await fetch(`${API_URL}/config/setup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ hospitalName, system, ...data })
+        body: JSON.stringify({ hospitalName, system, ...data }),
       });
 
-      if (res.ok) {
+      const json = await res.json().catch(() => ({}));
+
+      if (res.ok && json.isConfigured !== false) {
+        toast.success(json.message || 'Configuração realizada com sucesso!');
         navigate('/select-unit');
       } else {
-        toast.error('Erro ao configurar sistema.');
+        toast.error(json.message || 'Erro ao configurar sistema.');
       }
     } catch {
       toast.error('Erro de conexão com o servidor.');
     } finally {
-      toast.info('Simulando que tudo deu certo. Redirecionando...', { autoClose: 2000 });
-      navigate('/select-unit');
       setLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen bg-primary-light flex items-center justify-center p-6 relative overflow-hidden">
-
       {/* Background */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl"></div>
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-accent/10 rounded-full blur-3xl"></div>
 
       <div className="w-full max-w-4xl bg-white rounded-3xl shadow-xl border border-gray-100 flex flex-col md:flex-row overflow-hidden">
-
         {/* LEFT */}
         <div className="md:w-1/3 bg-gradient-to-br from-primary to-accent p-10 text-white hidden md:flex flex-col justify-between">
           <div>
@@ -67,7 +68,6 @@ export default function FirstAccess() {
 
         {/* RIGHT */}
         <div className="flex-1 p-10">
-
           <div className="mb-8">
             <h2 className="text-2xl font-black text-gray-800 mb-4 flex items-center gap-2">
               <Hospital className="w-5 h-5 text-primary" />
@@ -90,7 +90,6 @@ export default function FirstAccess() {
               >
                 <option value="SIGH">SIGH</option>
                 <option value="TASY">TASY</option>
-
               </select>
             </div>
           </div>
@@ -99,7 +98,6 @@ export default function FirstAccess() {
           {system === 'SIGH' && (
             <SighConfigure onSubmit={handleSubmit} loading={loading} />
           )}
-
         </div>
       </div>
     </div>

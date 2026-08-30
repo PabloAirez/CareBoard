@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+﻿import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Unidade } from '../../domain/entities/unidade.entity';
@@ -16,6 +16,7 @@ export class UnidadeRepositoryImpl implements UnidadeRepository {
     const entity = this.repository.create({
       nome: unidade.nome,
       hospitalId: unidade.hospitalId,
+      idSistemaExterno: unidade.idSistemaExterno,
     });
 
     const saved = await this.repository.save(entity);
@@ -60,6 +61,7 @@ export class UnidadeRepositoryImpl implements UnidadeRepository {
     await this.repository.update(unidade.id, {
       nome: unidade.nome,
       hospitalId: unidade.hospitalId,
+      idSistemaExterno: unidade.idSistemaExterno,
     });
 
     return unidade;
@@ -70,6 +72,11 @@ export class UnidadeRepositoryImpl implements UnidadeRepository {
   }
 
   private toDomain(unidade: UnidadeOrmEntity): Unidade {
-    return new Unidade(unidade.id, unidade.nome, unidade.hospitalId);
+    return new Unidade(
+      unidade.id,
+      unidade.nome,
+      unidade.hospitalId,
+      unidade.idSistemaExterno ?? null,
+    );
   }
 }

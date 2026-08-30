@@ -1,4 +1,4 @@
-import type { Bed } from '../../types/Dashboard';
+﻿import type { Bed } from '../../types/Dashboard';
 import { calculateMEWS, getRiskLevel } from '../../services/mews';
 import Vital from './Vital';
 
@@ -16,9 +16,10 @@ export function BedCard({ bed, onCreateDemand }: BedCardProps) {
   const mews = hasPatientData && bed.vitals ? calculateMEWS(bed.vitals) : 0;
   const risk = getRiskLevel(mews);
 
-  const getInitials = (name?: string | null) => {
+  const displayPatientName = (name?: string | null) => {
     if (!name) return '---';
-    return name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 3);
+    if (name.includes('.')) return name;
+    return name.split(' ').map((n) => n[0]).join('.').toUpperCase();
   };
 
   const getStayDaysValue = (date?: Date) => {
@@ -98,7 +99,7 @@ export function BedCard({ bed, onCreateDemand }: BedCardProps) {
 
   return (
     <article
-      title={isOccupied ? `${bed.status} | MEWS ${mews} (${risk})` : bed.status}
+      title={isOccupied ? `${bed.status} | Paciente: ${displayPatientName(bed.patientName)} | MEWS ${mews} (${risk})` : bed.status}
       className={`${status.bg} flex min-h-[136px] flex-col rounded-md border-l-4 ${borderColor} px-2 py-1.5 shadow-sm ring-1 ring-primary-light/80`}
     >
       <div className="flex items-center justify-between gap-1">
@@ -112,7 +113,7 @@ export function BedCard({ bed, onCreateDemand }: BedCardProps) {
 
       <div className="min-h-8 text-center">
         <div className="truncate text-lg font-black leading-5 text-primary-dark">
-          {isOccupied ? getInitials(bed.patientName) : status.label}
+          {isOccupied ? displayPatientName(bed.patientName) : status.label}
         </div>
         <div className={`text-[9px] font-black leading-3 ${status.text}`}>
           {isOccupied ? status.label : 'SEM PACIENTE'}
@@ -132,9 +133,14 @@ export function BedCard({ bed, onCreateDemand }: BedCardProps) {
           <Vital label="Cons." value={getConsciousnessLabel(bed.vitals.consciencia)} />
           <Vital label="PERM" value={getStayDays(admissionDate)} />
         </div>
+      ) : isOccupied ? (
+        <div className="mt-auto rounded bg-white/80 px-2 py-1.5 text-center text-[10px] font-black text-primary-dark ring-1 ring-primary-light flex flex-col justify-center items-center">
+          <div className="text-[9px] text-gray-500">Entrada: {admissionDate ? admissionDate.toLocaleDateString('pt-BR') : '--/--'}</div>
+          <div className="text-[10px] text-primary font-black">Perm: {getStayDays(admissionDate)}</div>
+        </div>
       ) : (
         <div className="mt-auto rounded bg-white/70 px-2 py-2 text-center text-[10px] font-black text-primary-dark/45 ring-1 ring-primary-light/70">
-          {isOccupied ? 'Sem sinais vitais' : 'Leito sem paciente'}
+          Leito sem paciente
         </div>
       )}
 

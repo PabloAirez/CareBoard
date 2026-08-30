@@ -1,4 +1,4 @@
-import { Body, Controller, NotFoundException, Param, ParseIntPipe, Patch, Post } from '@nestjs/common';
+﻿import { Body, Controller, Get, NotFoundException, Param, ParseIntPipe, Patch, Post, Query } from '@nestjs/common';
 import { PendingDemandService } from '../application/services/pending-demand.service';
 import { CreatePatientDemandDto } from './dto/create-patient-demand.dto';
 import { PendingDemandGateway } from './realtime/pending-demand.gateway';
@@ -9,6 +9,12 @@ export class DemandaController {
     private readonly pendingDemandService: PendingDemandService,
     private readonly pendingDemandGateway: PendingDemandGateway,
   ) {}
+
+  @Get('pending')
+  async getPending(@Query('unitId') unitId?: string) {
+    const parsedUnitId = unitId ? Number(unitId) : undefined;
+    return this.pendingDemandService.findPending(parsedUnitId);
+  }
 
   @Post()
   async create(@Body() dto: CreatePatientDemandDto) {

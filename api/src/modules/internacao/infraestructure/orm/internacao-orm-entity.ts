@@ -1,4 +1,4 @@
-import {
+﻿import {
   Column,
   Entity,
   Index,
@@ -34,6 +34,9 @@ export class InternacaoOrmEntity {
 
   @Column({ name: 'status_internacao_id', type: 'int' })
   statusInternacaoId!: number;
+
+  @Column({ name: 'id_sistema_externo', type: 'varchar', length: 100, nullable: true })
+  idSistemaExterno?: string | null;
 
   @ManyToOne(() => PacienteOrmEntity, (paciente) => paciente.internacoes)
   @JoinColumn({

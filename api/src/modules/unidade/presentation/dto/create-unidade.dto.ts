@@ -1,4 +1,4 @@
-import { IsInt, IsNotEmpty, IsString, MaxLength } from 'class-validator';
+﻿import { IsInt, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class CreateUnidadeDto {
   @IsString()
@@ -8,4 +8,12 @@ export class CreateUnidadeDto {
 
   @IsInt()
   hospitalId!: number;
+
+  @IsString()
+  @IsOptional()
+  idSistemaExterno?: string;
+
+  @IsString()
+  @IsOptional()
+  externalSystemId?: string;
 }
