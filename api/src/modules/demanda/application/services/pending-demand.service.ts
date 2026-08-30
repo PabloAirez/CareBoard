@@ -1,8 +1,12 @@
-import { Injectable } from '@nestjs/common';
+﻿import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, Repository } from 'typeorm';
 import { StatusDemandaOrmEntity } from '../../../status-demanda/infraestructure/orm/status-demanda-orm-entity';
 import { TipoDemandaOrmEntity } from '../../../tipo-demanda/infraestructure/orm/tipo-demanda-orm-entity';
+import { InternacaoOrmEntity } from '../../../internacao/infraestructure/orm/internacao-orm-entity';
+import { LeitoOrmEntity } from '../../../leito/infraestructure/orm/leito-orm-entity';
+import { PacienteOrmEntity } from '../../../paciente/infraestructure/orm/paciente-orm-entity';
+import { StatusInternacaoOrmEntity } from '../../../status-internacao/infraestructure/orm/status-internacao-orm-entity';
 import { DemandaOrmEntity } from '../../infraestructure/orm/demanda-orm-entity';
 import { CreatePatientDemandDto } from '../../presentation/dto/create-patient-demand.dto';
 import { PendingDemandDto } from '../../presentation/realtime/pending-demand.dto';
@@ -19,14 +23,108 @@ export class PendingDemandService {
     private readonly tipoDemandaRepository: Repository<TipoDemandaOrmEntity>,
     @InjectRepository(StatusDemandaOrmEntity)
     private readonly statusDemandaRepository: Repository<StatusDemandaOrmEntity>,
+    @InjectRepository(InternacaoOrmEntity)
+    private readonly internacaoRepository: Repository<InternacaoOrmEntity>,
+    @InjectRepository(LeitoOrmEntity)
+    private readonly leitoRepository: Repository<LeitoOrmEntity>,
+    @InjectRepository(PacienteOrmEntity)
+    private readonly pacienteRepository: Repository<PacienteOrmEntity>,
+    @InjectRepository(StatusInternacaoOrmEntity)
+    private readonly statusInternacaoRepository: Repository<StatusInternacaoOrmEntity>,
   ) {}
 
   async createPendingDemand(dto: CreatePatientDemandDto): Promise<PendingDemandDto> {
+    let targetAdmissionId = dto.admissionId;
+
+    if (!targetAdmissionId && dto.bedId) {
+      const activeAdmission = await this.internacaoRepository.findOne({
+        where: { leitoId: dto.bedId, dataSaida: IsNull() },
+        order: { dataEntrada: 'DESC' },
+      });
+
+      if (activeAdmission) {
+        targetAdmissionId = activeAdmission.id;
+      }
+    }
+
+    if (!targetAdmissionId && dto.bedNumber) {
+      const leito = await this.leitoRepository.findOne({
+        where: { numero: dto.bedNumber },
+      });
+
+      if (leito) {
+        const activeAdmission = await this.internacaoRepository.findOne({
+          where: { leitoId: leito.id, dataSaida: IsNull() },
+          order: { dataEntrada: 'DESC' },
+        });
+
+        if (activeAdmission) {
+          targetAdmissionId = activeAdmission.id;
+        } else {
+          // Se o leito existir mas nao tiver internacao salva ainda, cria internacao temporaria para o leito
+          let paciente = await this.pacienteRepository.findOne({ where: { nome: `Leito ${leito.numero}` } });
+          if (!paciente) {
+            paciente = await this.pacienteRepository.save(
+              this.pacienteRepository.create({ nome: `Leito ${leito.numero}` }),
+            );
+          }
+          let statusInt = await this.statusInternacaoRepository.findOne({ where: { descricao: 'ativa' } });
+          if (!statusInt) {
+            statusInt = await this.statusInternacaoRepository.save(
+              this.statusInternacaoRepository.create({ descricao: 'ativa' }),
+            );
+          }
+
+          const newAdmission = await this.internacaoRepository.save(
+            this.internacaoRepository.create({
+              pacienteId: paciente.id,
+              leitoId: leito.id,
+              dataEntrada: new Date(),
+              statusInternacaoId: statusInt.id,
+            }),
+          );
+          targetAdmissionId = newAdmission.id;
+        }
+      }
+    }
+
+    if (!targetAdmissionId && dto.bedId) {
+      const leito = await this.leitoRepository.findOne({ where: { id: dto.bedId } });
+      if (leito) {
+        let paciente = await this.pacienteRepository.findOne({ where: { nome: `Leito ${leito.numero}` } });
+        if (!paciente) {
+          paciente = await this.pacienteRepository.save(
+            this.pacienteRepository.create({ nome: `Leito ${leito.numero}` }),
+          );
+        }
+        let statusInt = await this.statusInternacaoRepository.findOne({ where: { descricao: 'ativa' } });
+        if (!statusInt) {
+          statusInt = await this.statusInternacaoRepository.save(
+            this.statusInternacaoRepository.create({ descricao: 'ativa' }),
+          );
+        }
+
+        const newAdmission = await this.internacaoRepository.save(
+          this.internacaoRepository.create({
+            pacienteId: paciente.id,
+            leitoId: leito.id,
+            dataEntrada: new Date(),
+            statusInternacaoId: statusInt.id,
+          }),
+        );
+        targetAdmissionId = newAdmission.id;
+      }
+    }
+
+    if (!targetAdmissionId) {
+      throw new NotFoundException('Leito ou internacao nao encontrados.');
+    }
+
     const tipoDemanda = await this.findOrCreateTipoDemanda(dto.type);
     const statusDemanda = await this.findOrCreateStatusDemanda(PENDING_STATUS);
 
     const demanda = this.demandaRepository.create({
-      internacaoId: dto.admissionId,
+      internacaoId: targetAdmissionId,
       tipoDemandaId: tipoDemanda.id,
       statusDemandaId: statusDemanda.id,
       dataHoraSolicitacao: new Date(),
@@ -40,7 +138,7 @@ export class PendingDemandService {
     return pending ?? this.toDto(saved);
   }
 
-  async findPending(): Promise<PendingDemandDto[]> {
+  async findPending(unitId?: number): Promise<PendingDemandDto[]> {
     const demandas = await this.demandaRepository.find({
       where: {
         dataHoraAtendimento: IsNull(),
@@ -56,7 +154,13 @@ export class PendingDemandService {
       },
     });
 
-    return demandas.map((demanda) => this.toDto(demanda));
+    const dtos = demandas.map((demanda) => this.toDto(demanda));
+
+    if (unitId) {
+      return dtos.filter((d) => d.unitId === Number(unitId));
+    }
+
+    return dtos;
   }
 
   async completeDemand(id: number): Promise<PendingDemandDto | null> {
@@ -135,6 +239,7 @@ export class PendingDemandService {
       admissionId: demanda.internacaoId,
       bedId: demanda.internacao?.leitoId ?? null,
       bedNumber: demanda.internacao?.leito?.numero ?? null,
+      unitId: demanda.internacao?.leito?.unidadeId ?? null,
       patientId: demanda.internacao?.pacienteId ?? null,
       patientName: demanda.internacao?.paciente?.nome ?? null,
       type,

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+﻿import { useCallback, useEffect, useMemo, useState } from 'react';
 import { io } from 'socket.io-client';
 import type { Call, CallPriority } from '../types/Dashboard';
 
@@ -9,6 +9,7 @@ interface PendingDemand {
   admissionId: number;
   bedId: number | null;
   bedNumber: string | null;
+  unitId?: number | null;
   type: string;
   priority: CallPriority;
   requestedAt: string;
@@ -23,7 +24,7 @@ const toCall = (demand: PendingDemand): Call => ({
   time: new Date(demand.requestedAt),
 });
 
-export function usePatientDemands(admissionId?: number, bedId?: number) {
+export function usePatientDemands(admissionId?: number, bedId?: number, bedNumber?: string) {
   const [demands, setDemands] = useState<PendingDemand[]>([]);
 
   useEffect(() => {
@@ -51,16 +52,15 @@ export function usePatientDemands(admissionId?: number, bedId?: number) {
   const activeDemands = useMemo(() => {
     return demands
       .filter((demand) => {
-        if (admissionId) return demand.admissionId === admissionId;
-        if (bedId) return demand.bedId === bedId;
+        if (admissionId && demand.admissionId === admissionId) return true;
+        if (bedId && demand.bedId === bedId) return true;
+        if (bedNumber && demand.bedNumber === bedNumber) return true;
         return false;
       })
       .map(toCall);
-  }, [admissionId, bedId, demands]);
+  }, [admissionId, bedId, bedNumber, demands]);
 
   const createDemand = useCallback(async (type: string) => {
-    if (!admissionId) return false;
-
     const hasActiveDemand = activeDemands.some((demand) => demand.type === type);
     if (hasActiveDemand) return false;
 
@@ -69,11 +69,16 @@ export function usePatientDemands(admissionId?: number, bedId?: number) {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ admissionId, type }),
+      body: JSON.stringify({
+        admissionId: admissionId ?? undefined,
+        bedId: bedId ?? undefined,
+        bedNumber: bedNumber ?? undefined,
+        type,
+      }),
     });
 
     return response.ok;
-  }, [activeDemands, admissionId]);
+  }, [activeDemands, admissionId, bedId, bedNumber]);
 
   const completeDemand = useCallback(async (demandId: string) => {
     const response = await fetch(`${API_URL}/api/demands/${demandId}/complete`, {

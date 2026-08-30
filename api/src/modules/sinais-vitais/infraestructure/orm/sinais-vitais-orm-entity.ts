@@ -1,4 +1,4 @@
-import {
+﻿import {
   Column,
   Entity,
   Index,
@@ -41,16 +41,19 @@ export class SinaisVitaisOrmEntity {
   @Column({ name: 'pressao_diastolica', type: 'int', nullable: true })
   pressaoDiastolica?: number | null;
 
-@Column({
-  name: 'nivel_consciencia',
-  type: 'varchar',
-  length: 100,
-  nullable: true,
-})
-nivelConsciencia?: string | null;
+  @Column({
+    name: 'nivel_consciencia',
+    type: 'varchar',
+    length: 100,
+    nullable: true,
+  })
+  nivelConsciencia?: string | null;
 
   @Column({ name: 'mews_score', type: 'int', nullable: true })
   mewsScore?: number | null;
+
+  @Column({ name: 'id_sistema_externo', type: 'varchar', length: 100, nullable: true })
+  idSistemaExterno?: string | null;
 
   @ManyToOne(() => PacienteOrmEntity, (paciente) => paciente.sinaisVitais, {
     onDelete: 'CASCADE',

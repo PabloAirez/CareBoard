@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+﻿import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, Repository } from 'typeorm';
 import { InternacaoOrmEntity } from '../internacao/infraestructure/orm/internacao-orm-entity';
@@ -43,15 +43,23 @@ export class DashboardService {
 
     const internacoes = await this.internacaoRepository.find({
       where: { dataSaida: IsNull() },
-      relations: { paciente: true },
+      relations: { paciente: true, leito: true },
       order: { dataEntrada: 'DESC' },
     });
 
-    const activeAdmissionByBed = new Map<number, InternacaoOrmEntity>();
+    const activeAdmissionByBedId = new Map<number, InternacaoOrmEntity>();
+    const activeAdmissionByBedExtId = new Map<string, InternacaoOrmEntity>();
 
     for (const internacao of internacoes) {
-      if (!activeAdmissionByBed.has(internacao.leitoId)) {
-        activeAdmissionByBed.set(internacao.leitoId, internacao);
+      if (internacao.leitoId) {
+        if (!activeAdmissionByBedId.has(internacao.leitoId)) {
+          activeAdmissionByBedId.set(internacao.leitoId, internacao);
+        }
+      }
+      if (internacao.leito?.idSistemaExterno) {
+        if (!activeAdmissionByBedExtId.has(internacao.leito.idSistemaExterno)) {
+          activeAdmissionByBedExtId.set(internacao.leito.idSistemaExterno, internacao);
+        }
       }
     }
 
@@ -59,15 +67,22 @@ export class DashboardService {
     const latestVitalsByPatient = await this.findLatestVitalsByPatient(patientIds);
 
     return leitos.map((leito) => {
-      const internacao = activeAdmissionByBed.get(leito.id);
+      const internacao =
+        activeAdmissionByBedId.get(leito.id) ||
+        (leito.idSistemaExterno ? activeAdmissionByBedExtId.get(leito.idSistemaExterno) : undefined);
+
       const vitals = internacao
         ? latestVitalsByPatient.get(internacao.pacienteId)
         : undefined;
 
+      const hasAdmission = Boolean(internacao);
+      const isStatusOccupied = leito.statusLeito?.descricao?.toLowerCase() === 'ocupado';
+      const isOccupied = hasAdmission || isStatusOccupied;
+
       return {
         id: leito.id,
         number: leito.numero,
-        status: this.toFrontendStatus(leito.statusLeito?.descricao),
+        status: isOccupied ? 'Ocupado' : this.toFrontendStatus(leito.statusLeito?.descricao),
         admissionId: internacao?.id ?? null,
         patientId: internacao?.pacienteId ?? null,
         patientName: internacao?.paciente?.nome ?? null,
