@@ -1,4 +1,4 @@
-﻿services:
+services:
   postgres:
     image: postgres:16
     container_name: careboard_postgres
@@ -7,6 +7,8 @@
       POSTGRES_DB: careboard
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
+      TZ: America/Sao_Paulo
+      PGTZ: America/Sao_Paulo
     ports:
       - "5432:5432"
     volumes:
@@ -28,6 +30,7 @@
       DB_PASSWORD: postgres
       DB_DATABASE: careboard
       ENCRYPTION_KEY: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+      TZ: America/Sao_Paulo
     volumes:
       - ./api:/app
     command: npm run start:dev
@@ -41,6 +44,8 @@
       - api
     ports:
       - "5173:5173"
+    environment:
+      TZ: America/Sao_Paulo
     volumes:
       - ./frontend:/app
     command: npm run dev -- --host

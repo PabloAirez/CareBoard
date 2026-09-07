@@ -12,6 +12,9 @@ import { InternacaoOrmEntity } from '../internacao/infraestructure/orm/internaca
 import { SinaisVitaisOrmEntity } from '../sinais-vitais/infraestructure/orm/sinais-vitais-orm-entity';
 import { TipoUsuarioOrmEntity } from '../tipo-usuario/infraestructure/orm/tipo-usuario-orm-entity';
 import { UsuarioOrmEntity } from '../usuario/infraestructure/orm/usuario-orm-entity';
+import { DemandaOrmEntity } from '../demanda/infraestructure/orm/demanda-orm-entity';
+import { TipoDemandaOrmEntity } from '../tipo-demanda/infraestructure/orm/tipo-demanda-orm-entity';
+import { StatusDemandaOrmEntity } from '../status-demanda/infraestructure/orm/status-demanda-orm-entity';
 
 import { EncryptionService } from './application/services/encryption.service';
 import { SighConnectionService } from './application/services/sigh-connection.service';
@@ -35,6 +38,9 @@ import { ConfigController } from './presentation/config.controller';
       SinaisVitaisOrmEntity,
       TipoUsuarioOrmEntity,
       UsuarioOrmEntity,
+      DemandaOrmEntity,
+      TipoDemandaOrmEntity,
+      StatusDemandaOrmEntity,
     ]),
   ],
   controllers: [IntegracaoBancoController, ConfigController],

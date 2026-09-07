@@ -1,5 +1,5 @@
 ﻿import type { Bed } from '../../types/Dashboard';
-import { calculateMEWS, getRiskLevel } from '../../services/mews';
+import { calculateMEWSBreakdown, getRiskLevel } from '../../services/mews';
 import Vital from './Vital';
 
 interface BedCardProps {
@@ -13,7 +13,8 @@ export function BedCard({ bed, onCreateDemand }: BedCardProps) {
     ? new Date(bed.admissionDate)
     : undefined;
   const hasPatientData = isOccupied && Boolean(bed.patientName || bed.vitals || admissionDate);
-  const mews = hasPatientData && bed.vitals ? calculateMEWS(bed.vitals) : 0;
+  const mewsBreakdown = hasPatientData && bed.vitals ? calculateMEWSBreakdown(bed.vitals) : null;
+  const mews = mewsBreakdown?.score ?? 0;
   const risk = getRiskLevel(mews);
 
   const displayPatientName = (name?: string | null) => {
@@ -58,6 +59,17 @@ export function BedCard({ bed, onCreateDemand }: BedCardProps) {
     }
   };
 
+  const formatObsDate = (dataHora?: string | Date | null) => {
+    if (!dataHora) return null;
+    const date = new Date(dataHora);
+    if (isNaN(date.getTime())) return null;
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${day}/${month} ${hours}:${minutes}`;
+  };
+
   const getStatusMeta = (status: string) => {
     switch (status) {
       case 'Ocupado':
@@ -96,11 +108,15 @@ export function BedCard({ bed, onCreateDemand }: BedCardProps) {
   const status = getStatusMeta(bed.status);
   const borderColor = getStayBorderColor(admissionDate) ?? status.border;
   const canCreateDemand = isOccupied && Boolean(bed.admissionId) && onCreateDemand;
+  const obsDateFormatted = isOccupied && bed.vitals ? formatObsDate(bed.vitals.dataHora) : null;
+  const mostAlteredText = mewsBreakdown?.mostAltered && mewsBreakdown.mostAltered.length > 0
+    ? mewsBreakdown.mostAltered.map((a) => `${a.name} (+${a.points})`).slice(0, 2).join(', ')
+    : null;
 
   return (
     <article
       title={isOccupied ? `${bed.status} | Paciente: ${displayPatientName(bed.patientName)} | MEWS ${mews} (${risk})` : bed.status}
-      className={`${status.bg} flex min-h-[136px] flex-col rounded-md border-l-4 ${borderColor} px-2 py-1.5 shadow-sm ring-1 ring-primary-light/80`}
+      className={`${status.bg} flex min-h-[148px] flex-col rounded-md border-l-4 ${borderColor} px-2 py-1.5 shadow-sm ring-1 ring-primary-light/80`}
     >
       <div className="flex items-center justify-between gap-1">
         <span className="text-[11px] font-black leading-4 text-primary-dark">
@@ -111,7 +127,7 @@ export function BedCard({ bed, onCreateDemand }: BedCardProps) {
         </span>
       </div>
 
-      <div className="min-h-8 text-center">
+      <div className="min-h-7 text-center">
         <div className="truncate text-lg font-black leading-5 text-primary-dark">
           {isOccupied ? displayPatientName(bed.patientName) : status.label}
         </div>
@@ -121,17 +137,48 @@ export function BedCard({ bed, onCreateDemand }: BedCardProps) {
       </div>
 
       {isOccupied && bed.vitals ? (
-        <div className="grid grid-cols-3 gap-1 text-center text-[9px]">
-          <Vital
-            label="PA"
-            value={`${Math.round(bed.vitals.paSistolica)}/${Math.round(bed.vitals.paDiastolica)}`}
-            wide
-          />
-          <Vital label="FC" value={Math.round(bed.vitals.fc)} />
-          <Vital label="FR" value={Math.round(bed.vitals.fr)} />
-          <Vital label="T" value={bed.vitals.temp.toFixed(1)} />
-          <Vital label="Cons." value={getConsciousnessLabel(bed.vitals.consciencia)} />
-          <Vital label="PERM" value={getStayDays(admissionDate)} />
+        <div className="mt-1 flex flex-col gap-1">
+          <div className="grid grid-cols-3 gap-1 text-center text-[9px]">
+            <Vital
+              label="PA"
+              value={`${Math.round(bed.vitals.paSistolica)}/${Math.round(bed.vitals.paDiastolica)}`}
+              wide
+              points={mewsBreakdown?.pasPoints ?? 0}
+            />
+            <Vital
+              label="FC"
+              value={Math.round(bed.vitals.fc)}
+              points={mewsBreakdown?.fcPoints ?? 0}
+            />
+            <Vital
+              label="FR"
+              value={Math.round(bed.vitals.fr)}
+              points={mewsBreakdown?.frPoints ?? 0}
+            />
+            <Vital
+              label="T"
+              value={bed.vitals.temp.toFixed(1)}
+              points={mewsBreakdown?.tempPoints ?? 0}
+            />
+            <Vital
+              label="Cons."
+              value={getConsciousnessLabel(bed.vitals.consciencia)}
+              points={mewsBreakdown?.conscienciaPoints ?? 0}
+            />
+            <Vital label="PERM" value={getStayDays(admissionDate)} />
+          </div>
+
+          {mostAlteredText && (
+            <div className="rounded bg-accent-light/40 px-1 py-0.5 text-center text-[8px] font-black text-accent-dark truncate" title={`Sinais mais alterados: ${mostAlteredText}`}>
+              Alt: {mostAlteredText}
+            </div>
+          )}
+
+          {obsDateFormatted && (
+            <div className="text-center text-[8px] font-bold text-gray-500">
+              Obs: {obsDateFormatted}
+            </div>
+          )}
         </div>
       ) : isOccupied ? (
         <div className="mt-auto rounded bg-white/80 px-2 py-1.5 text-center text-[10px] font-black text-primary-dark ring-1 ring-primary-light flex flex-col justify-center items-center">
