@@ -1,4 +1,4 @@
-import {
+﻿import {
   Column,
   Entity,
   Index,
@@ -34,6 +34,12 @@ export class DemandaOrmEntity {
 
   @Column({ name: 'atendido_por_usuario_id', type: 'int', nullable: true })
   atendidoPorUsuarioId?: number | null;
+
+  @Column({ type: 'text', nullable: true })
+  observacao?: string | null;
+
+  @Column({ name: 'id_sistema_externo', type: 'varchar', length: 100, nullable: true })
+  idSistemaExterno?: string | null;
 
   @ManyToOne(() => InternacaoOrmEntity, (internacao) => internacao.demandas, {
     onDelete: 'CASCADE',

@@ -19,6 +19,7 @@ interface PendingDemand {
   type: string;
   priority: 'Normal' | 'Emergência';
   requestedAt: string;
+  observation?: string | null;
 }
 
 const toCall = (demand: PendingDemand): Call => ({
@@ -28,6 +29,7 @@ const toCall = (demand: PendingDemand): Call => ({
   type: demand.type,
   priority: demand.priority,
   time: new Date(demand.requestedAt),
+  observation: demand.observation ?? null,
 });
 
 const toBed = (bed: Bed): Bed => ({

@@ -10,4 +10,5 @@
   status: string;
   requestedAt: Date;
   priority: 'Normal' | 'Emergência';
+  observation?: string | null;
 }

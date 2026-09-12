@@ -61,7 +61,6 @@ export class PendingDemandService {
         if (activeAdmission) {
           targetAdmissionId = activeAdmission.id;
         } else {
-          // Se o leito existir mas nao tiver internacao salva ainda, cria internacao temporaria para o leito
           let paciente = await this.pacienteRepository.findOne({ where: { nome: `Leito ${leito.numero}` } });
           if (!paciente) {
             paciente = await this.pacienteRepository.save(
@@ -246,6 +245,7 @@ export class PendingDemandService {
       status,
       requestedAt: demanda.dataHoraSolicitacao,
       priority: this.resolvePriority(type),
+      observation: demanda.observacao ?? null,
     };
   }
 

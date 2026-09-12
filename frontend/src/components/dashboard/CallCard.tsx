@@ -1,4 +1,4 @@
-import { ClipboardList, Clock3, PhoneCall, Pill, ShieldAlert, Utensils } from 'lucide-react';
+﻿import { ClipboardList, Clock3, PhoneCall, Pill, ShieldAlert, Utensils } from 'lucide-react';
 import type { Call } from '../../types/Dashboard';
 
 export function CallCard({ call }: { call: Call }) {
@@ -54,6 +54,12 @@ export function CallCard({ call }: { call: Call }) {
           {isEmergency ? 'URG' : 'OK'}
         </span>
       </div>
+
+      {call.observation && (
+        <div className="mt-1.5 rounded bg-white/80 p-1.5 text-[10px] font-bold text-primary-dark border border-primary-light/80">
+          {call.observation}
+        </div>
+      )}
     </article>
   );
 }

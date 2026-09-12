@@ -1,4 +1,4 @@
-import type { Vitals } from './Clinical';
+﻿import type { Vitals } from './Clinical';
 
 export type BedStatus =
   | 'Livre'
@@ -35,4 +35,5 @@ export interface Call {
   type: string;
   priority: CallPriority;
   time: Date;
+  observation?: string | null;
 }
