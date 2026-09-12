@@ -1,4 +1,4 @@
-﻿services:
+services:
   postgres:
     image: postgres:16
     container_name: careboard_postgres
@@ -7,6 +7,8 @@
       POSTGRES_DB: careboard
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
+      TZ: America/Sao_Paulo
+      PGTZ: America/Sao_Paulo
     ports:
       - "5432:5432"
     volumes:
@@ -28,9 +30,11 @@
       DB_PASSWORD: postgres
       DB_DATABASE: careboard
       ENCRYPTION_KEY: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+      TZ: America/Sao_Paulo
     volumes:
       - ./api:/app
-    command: npm run start:dev
+      - api_node_modules:/app/node_modules
+    command: sh -c "npm install --no-fund --no-audit && npm run start:dev"
 
   frontend:
     build:
@@ -41,10 +45,14 @@
       - api
     ports:
       - "5173:5173"
+    environment:
+      TZ: America/Sao_Paulo
     volumes:
       - ./frontend:/app
       - frontend_node_modules:/app/node_modules
-    command: npm run dev -- --host
+    command: sh -c "npm install --no-fund --no-audit && npm run dev -- --host"
 
 volumes:
   postgres_data:
+  api_node_modules:
+  frontend_node_modules:

@@ -1,3 +1,5 @@
+process.env.TZ = process.env.TZ || 'America/Sao_Paulo';
+
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';

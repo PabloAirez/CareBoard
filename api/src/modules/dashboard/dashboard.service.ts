@@ -20,6 +20,7 @@ export interface DashboardBed {
     fr: number;
     temp: number;
     consciencia: string;
+    dataHora: Date | string | null;
   } | null;
 }
 
@@ -121,6 +122,7 @@ export class DashboardService {
       fr: sinaisVitais.frequenciaRespiratoria ?? 0,
       temp: Number(sinaisVitais.temperatura ?? 0),
       consciencia: sinaisVitais.nivelConsciencia ?? 'Alerta',
+      dataHora: sinaisVitais.dataHora ?? null,
     };
   }
 

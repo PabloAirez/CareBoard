@@ -46,21 +46,47 @@
 
   GET_SINAIS_VITAIS: `
     SELECT 
-      sv.id_observacao,
-      p.id_paciente,
+      (CAST(ee.cod_fia AS VARCHAR) || '_' || CAST(ee.data_observacao AS VARCHAR) || '_' || COALESCE(CAST(ee.hora_observacao AS VARCHAR), '00:00')) AS id_observacao,
+      ee.cod_fia,
+      fia.cod_paciente AS id_paciente,
       p.nm_paciente,
-      sv.data_observacao,
-      sv.hora_observacao,
-      sv.temperatura,
-      sv.fc,
-      sv.fr,
-      sv.pas,
-      sv.pad,
-      er.sensorio
-    FROM sigh.sinais_vitais sv
-    JOIN sigh.pacientes p ON (sv.cod_paciente = p.id_paciente OR sv.cod_paciente = p.cod_paciente)
-    LEFT JOIN sigh.evolucao_regulacao er ON ((sv.cod_paciente = er.id_paciente OR sv.cod_paciente = er.cod_paciente)
-      AND sv.data_observacao = er.data_observacao)
-    ORDER BY sv.data_observacao DESC;
+      ee.data_observacao,
+      ee.hora_observacao,
+      ee.fr,
+      ee.fc,
+      ee.pressao,
+      ee.temperatura,
+      la.sensorio
+    FROM sigh.evolucao_enfermagem ee
+    JOIN sigh.ficha_amb_int fia ON fia.id_fia = ee.cod_fia
+    LEFT JOIN sigh.pacientes p ON p.id_paciente = fia.cod_paciente
+    LEFT JOIN sigh.laudos_aihs la ON la.cod_fia = fia.id_fia
+    WHERE fia.tipo_atend = 'INT'
+      AND fia.data_alta IS NULL
+    ORDER BY ee.cod_fia ASC, ee.data_observacao ASC, ee.hora_observacao ASC;
+  `,
+
+  GET_APRAZAMENTOS_MEDICAMENTOS: `
+    SELECT DISTINCT
+      ire.id_item_requisicao_estoque AS id_item,
+      re.cod_fia,
+      p.nm_produto AS nome_medicamento,
+      ire.horarios_aprazamento,
+      ire.observacao,
+      ire.data AS data_aprazamento,
+      fia.cod_leito AS id_leito,
+      (COALESCE(q.nm_quarto, 'Q') || '-' || COALESCE(l.nm_leito, 'L')) AS numero_leito,
+      u.id_unidade
+    FROM sigh.itens_requisicoes_estoques ire
+    JOIN sigh.requisicoes_estoques re ON ire.cod_requisicao_estoque = re.id_requisicao_estoque
+    JOIN sigh.ficha_amb_int fia ON fia.id_fia = re.cod_fia
+    LEFT JOIN sigh.produtos p ON p.id_produto = ire.cod_produto
+    LEFT JOIN sigh.leitos l ON fia.cod_leito = l.id_leito
+    LEFT JOIN sigh.quartos_enfermarias q ON l.cod_quarto_enf = q.id_quarto_enf
+    LEFT JOIN sigh.unidades u ON u.id_unidade = fia.cod_unidade
+    WHERE fia.tipo_atend = 'INT'
+      AND fia.data_alta IS NULL
+      AND ire.tipo_item_prescricao = 'ME'
+      AND (ire.data = CURRENT_DATE OR ire.data IS NULL);
   `,
 };

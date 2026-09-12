@@ -1,4 +1,4 @@
-export type Consciousness = 'Alerta' | 'Voz' | 'Dor' | 'Inconsciente';
+﻿export type Consciousness = 'Alerta' | 'Voz' | 'Dor' | 'Inconsciente';
 
 export interface Vitals {
   paSistolica: number;
@@ -7,6 +7,7 @@ export interface Vitals {
   fr: number;
   temp: number;
   consciencia: Consciousness;
+  dataHora?: string | Date | null;
 }
 
 export type RiskLevel = 'Baixo' | 'Moderado' | 'Alto';
