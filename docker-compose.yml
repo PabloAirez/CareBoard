@@ -45,10 +45,9 @@ services:
       - api
     environment:
       VITE_API_URL: https://hub.hsjeronimo.com.br
+      TZ: America/Sao_Paulo
     ports:
       - "5173:5173"
-    environment:
-      TZ: America/Sao_Paulo
     volumes:
       - ./frontend:/app
       - frontend_node_modules:/app/node_modules
