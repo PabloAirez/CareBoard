@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Building2, ArrowRight, Loader2, AlertTriangle } from 'lucide-react';
 import { io } from 'socket.io-client';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_URL = import.meta.env.VITE_API_URL || 'https://hub.hsjeronimo.com.br';
 
 interface Unit {
   id: number;

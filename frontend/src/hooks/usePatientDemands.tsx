@@ -2,7 +2,7 @@
 import { io } from 'socket.io-client';
 import type { Call, CallPriority } from '../types/Dashboard';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_URL = import.meta.env.VITE_API_URL || 'https://hub.hsjeronimo.com.br';
 
 interface PendingDemand {
   id: number;

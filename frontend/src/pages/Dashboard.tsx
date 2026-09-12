@@ -8,7 +8,7 @@ import type { Bed, Call } from '../types/Dashboard';
 
 const BEDS_PER_PAGE = 40;
 const BED_ROTATION_INTERVAL_MS = 30000;
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_URL = import.meta.env.VITE_API_URL || 'https://hub.hsjeronimo.com.br';
 
 interface PendingDemand {
   id: number;

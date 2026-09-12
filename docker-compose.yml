@@ -34,7 +34,11 @@ services:
     volumes:
       - ./api:/app
       - api_node_modules:/app/node_modules
+<<<<<<< Updated upstream
     command: sh -c "npm install --no-fund --no-audit && npm run start:dev"
+=======
+    command: npm run start:dev
+>>>>>>> Stashed changes
 
   frontend:
     build:
@@ -43,6 +47,8 @@ services:
     restart: always
     depends_on:
       - api
+    environment:
+      VITE_API_URL: https://hub.hsjeronimo.com.br
     ports:
       - "5173:5173"
     environment:

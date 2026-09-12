@@ -4,7 +4,7 @@ import { Settings, Activity, Hospital } from 'lucide-react';
 import { toast } from 'react-toastify';
 import SighConfigure from './../components/SighConfigure';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_URL = import.meta.env.VITE_API_URL || 'https://hub.hsjeronimo.com.br';
 
 export default function FirstAccess() {
   const [hospitalName, setHospitalName] = useState('');
