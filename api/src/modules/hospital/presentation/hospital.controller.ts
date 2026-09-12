@@ -18,7 +18,7 @@ import { UpdateHospitalUseCase } from '../application/use-cases/update-hospital-
 import { CreateHospitalDto } from './dto/create-hospital.dto';
 import { UpdateHospitalDto } from './dto/update-hospital.dto';
 
-@Controller('hospitals')
+@Controller(['api/hospitals', 'hospitals'])
 export class HospitalController {
   constructor(
     private readonly createHospital: CreateHospitalUseCase,

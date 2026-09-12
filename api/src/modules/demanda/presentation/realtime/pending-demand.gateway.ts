@@ -1,4 +1,4 @@
-﻿import {
+import {
   OnGatewayConnection,
   WebSocketGateway,
   WebSocketServer,
@@ -36,6 +36,8 @@ export class PendingDemandGateway implements OnGatewayConnection {
 
     if (unitId) {
       void client.join(`unit_${unitId}`);
+    } else {
+      void client.join('global_units');
     }
 
     const pendingDemands = await this.pendingDemandService.findPending(unitId);
@@ -67,19 +69,24 @@ export class PendingDemandGateway implements OnGatewayConnection {
       }
     }
 
-    // Emit unit-filtered demand list to each unit room
-    for (const [unitId, unitDemands] of unitMap.entries()) {
-      this.server.to(`unit_${unitId}`).emit('demand:pending:list', unitDemands);
+    // Get all rooms starting with unit_
+    const activeRooms = Array.from(this.server.sockets.adapter.rooms.keys())
+      .filter((room) => room.startsWith('unit_'));
+
+    for (const roomName of activeRooms) {
+      const unitId = Number(roomName.replace('unit_', ''));
+      const unitDemands = unitMap.get(unitId) || [];
+      this.server.to(roomName).emit('demand:pending:list', unitDemands);
     }
 
-    // Broadcast overall list for global/admin clients not scoped to a single unit
-    this.server.emit('demand:pending:list', allPendingDemands);
+    // Broadcast overall list ONLY to global clients not joined to a specific unit room
+    this.server.to('global_units').emit('demand:pending:list', allPendingDemands);
 
     for (const demand of newDemands) {
       if (demand.unitId) {
         this.server.to(`unit_${demand.unitId}`).emit('demand:pending:new', demand);
       }
-      this.server.emit('demand:pending:new', demand);
+      this.server.to('global_units').emit('demand:pending:new', demand);
     }
   }
 }
