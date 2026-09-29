@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Lock, User, Activity, ArrowRight } from 'lucide-react';
 import { toast } from 'react-toastify';
@@ -19,7 +19,13 @@ export default function Login() {
     if (!isAuthenticated || !user) return;
 
     const isBedUser = user.role === 'paciente' || user.role === 'leito';
-    navigate(isBedUser ? '/patient' : '/select-unit', { replace: true });
+    if (isBedUser) {
+      navigate('/patient', { replace: true });
+    } else if (user.role === 'higienizacao' || user.role === 'limpeza') {
+      navigate('/higienizacao', { replace: true });
+    } else {
+      navigate('/select-unit', { replace: true });
+    }
   }, [isAuthenticated, navigate, user]);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -46,6 +52,11 @@ export default function Login() {
 
       if (isBedUser) {
         navigate('/patient');
+        return;
+      }
+
+      if (loggedUser.role === 'higienizacao' || loggedUser.role === 'limpeza') {
+        navigate('/higienizacao');
         return;
       }
 

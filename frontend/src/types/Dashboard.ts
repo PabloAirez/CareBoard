@@ -1,10 +1,12 @@
-﻿import type { Vitals } from './Clinical';
+import type { Vitals } from './Clinical';
 
 export type BedStatus =
   | 'Livre'
   | 'Ocupado'
   | 'Aguardando Limpeza'
+  | 'Esperando Higienização'
   | 'Em Limpeza'
+  | 'Em Higienização'
   | 'Bloqueado';
 
 export type CareLevel =
