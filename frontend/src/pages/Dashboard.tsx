@@ -1,4 +1,4 @@
-﻿import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { io } from 'socket.io-client';
 import { BedCard } from '../components/dashboard/BedCard';
@@ -42,6 +42,8 @@ export default function Dashboard() {
   const [calls, setCalls] = useState<Call[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [currentBedPage, setCurrentBedPage] = useState(0);
+  const [unitName, setUnitName] = useState<string>('Unidade');
+  const [hospitalName, setHospitalName] = useState<string>('CareBoard Hospital');
 
   const bedPages = useMemo(() => {
     const pages = [];
@@ -57,6 +59,38 @@ export default function Dashboard() {
   const visibleBeds = bedPages[currentBedPage] ?? bedPages[0] ?? [];
   const visibleStart = currentBedPage * BEDS_PER_PAGE + 1;
   const visibleEnd = currentBedPage * BEDS_PER_PAGE + visibleBeds.length;
+
+  const fetchHeaderInfo = () => {
+    const unitId = new URLSearchParams(window.location.search).get('unit');
+    if (unitId) {
+      fetch(`${API_URL}/api/units/${unitId}`)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((unitData) => {
+          if (unitData?.name) {
+            setUnitName(unitData.name);
+          }
+          const hId = unitData?.hospitalId ?? 1;
+          fetch(`${API_URL}/api/hospitals/${hId}`)
+            .then((hRes) => (hRes.ok ? hRes.json() : null))
+            .then((hData) => {
+              if (hData?.nome) {
+                setHospitalName(hData.nome);
+              } else if (hData?.name) {
+                setHospitalName(hData.name);
+              }
+            })
+            .catch(() => {});
+        })
+        .catch(() => {});
+    } else {
+      fetch(`${API_URL}/api/hospitals/1`)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((hData) => {
+          if (hData?.nome) setHospitalName(hData.nome);
+        })
+        .catch(() => {});
+    }
+  };
 
   const fetchBeds = () => {
     const unitId = new URLSearchParams(window.location.search).get('unit');
@@ -97,19 +131,28 @@ export default function Dashboard() {
   useEffect(() => {
     fetchBeds();
     fetchPendingDemands();
+    fetchHeaderInfo();
   }, []);
 
   useEffect(() => {
-    const unitId = new URLSearchParams(window.location.search).get('unit');
+    const unitParam = new URLSearchParams(window.location.search).get('unit');
+    const selectedUnitId = unitParam ? Number(unitParam) : null;
+
     const socket = io(API_URL, {
-      query: { unitId },
+      query: { unitId: selectedUnitId },
     });
 
     socket.on('demand:pending:list', (pendingDemands: PendingDemand[]) => {
-      setCalls(pendingDemands.map(toCall));
+      const filtered = selectedUnitId
+        ? pendingDemands.filter((d) => !d.unitId || d.unitId === selectedUnitId)
+        : pendingDemands;
+      setCalls(filtered.map(toCall));
     });
 
     socket.on('demand:pending:new', (pendingDemand: PendingDemand) => {
+      if (selectedUnitId && pendingDemand.unitId && pendingDemand.unitId !== selectedUnitId) {
+        return;
+      }
       setCalls((currentCalls) => {
         const nextCall = toCall(pendingDemand);
 
@@ -184,7 +227,7 @@ export default function Dashboard() {
     <div className="h-screen overflow-hidden bg-primary-light/40 text-primary-dark">
       <div className="flex h-screen flex-col overflow-hidden lg:flex-row">
         <main className="flex min-h-0 flex-1 flex-col overflow-hidden p-2.5 sm:p-3">
-          <Header beds={beds} />
+          <Header hospitalName={hospitalName} unitName={unitName} beds={beds} />
 
           <section className="mt-2.5 min-h-0 flex-1 overflow-hidden">
             <div className="mb-2 flex items-center justify-between gap-4">
