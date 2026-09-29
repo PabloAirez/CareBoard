@@ -1,4 +1,4 @@
-﻿import { Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, Repository } from 'typeorm';
 import { InternacaoOrmEntity } from '../internacao/infraestructure/orm/internacao-orm-entity';
@@ -134,14 +134,15 @@ export class DashboardService {
         return 'Ocupado';
       case 'bloqueado':
         return 'Bloqueado';
+      case 'esperando higienização':
       case 'aguardando higienização':
       case 'aguardando limpeza':
-        return 'Aguardando Limpeza';
+        return 'Esperando Higienização';
       case 'em higienização':
       case 'em limpeza':
-        return 'Em Limpeza';
+        return 'Em Higienização';
       default:
-        return 'Livre';
+        return status ? status : 'Livre';
     }
   }
 }

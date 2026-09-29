@@ -1,6 +1,6 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Building2, ArrowRight, Loader2, AlertTriangle } from 'lucide-react';
+import { Building2, ArrowRight, Loader2, AlertTriangle, Sparkles } from 'lucide-react';
 import { io } from 'socket.io-client';
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://hub.hsjeronimo.com.br';
@@ -67,7 +67,7 @@ export default function SelectUnit() {
   return (
     <div className="min-h-screen bg-primary-light flex items-center justify-center p-6">
       <div className="max-w-2xl w-full">
-        <div className="text-center mb-10">
+        <div className="text-center mb-8">
           <div className="bg-primary w-16 h-16 rounded-2xl flex items-center justify-center text-white mx-auto mb-4 shadow-lg shadow-primary/30">
             <Building2 size={32} />
           </div>
@@ -79,6 +79,16 @@ export default function SelectUnit() {
           <p className="text-gray-500 mt-2 text-lg">
             Selecione sua Unidade de Internacao
           </p>
+
+          <div className="mt-4 flex justify-center">
+            <button
+              onClick={() => navigate('/higienizacao')}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-bold text-sm rounded-xl shadow-md transition-all hover:scale-105"
+            >
+              <Sparkles className="w-4 h-4" />
+              <span>Acessar Módulo de Higienização</span>
+            </button>
+          </div>
         </div>
 
         {loading ? (

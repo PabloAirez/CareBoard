@@ -1,4 +1,4 @@
-﻿import type { Bed } from '../../types/Dashboard';
+import type { Bed } from '../../types/Dashboard';
 import { calculateMEWSBreakdown, getRiskLevel } from '../../services/mews';
 import Vital from './Vital';
 
@@ -76,10 +76,12 @@ export function BedCard({ bed, onCreateDemand }: BedCardProps) {
         return { label: 'OCUPADO', bg: 'bg-white', border: 'border-primary', text: 'text-primary' };
       case 'Livre':
         return { label: 'LIVRE', bg: 'bg-secondary-light/55', border: 'border-secondary', text: 'text-secondary-dark' };
+      case 'Esperando Higienização':
       case 'Aguardando Limpeza':
-        return { label: 'AG. LIMP', bg: 'bg-primary-light/65', border: 'border-primary-dark', text: 'text-primary-dark' };
+        return { label: 'ESP. HIGIENIZ', bg: 'bg-amber-50', border: 'border-amber-500', text: 'text-amber-700' };
+      case 'Em Higienização':
       case 'Em Limpeza':
-        return { label: 'LIMPEZA', bg: 'bg-primary-light/65', border: 'border-primary-dark', text: 'text-primary-dark' };
+        return { label: 'EM HIGIENIZ', bg: 'bg-blue-50', border: 'border-blue-500', text: 'text-blue-700' };
       case 'Bloqueado':
         return { label: 'BLOQ', bg: 'bg-accent-light/65', border: 'border-accent', text: 'text-accent-dark' };
       default:

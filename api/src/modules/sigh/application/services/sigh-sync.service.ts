@@ -189,6 +189,7 @@ export class SighSyncService {
       internacoes: 0,
       sinaisVitais: 0,
       aprazamentos: 0,
+      exames: 0,
     };
 
     // 1. Status de Leito Padrão
@@ -211,10 +212,15 @@ export class SighSyncService {
       tipoLeito = await this.tipoUsuarioRepo.save(this.tipoUsuarioRepo.create({ descricao: 'Leito' }));
     }
 
-    // Tipo de Demanda e Status para Aprazamentos
+    // Tipo de Demanda e Status para Aprazamentos e Exames
     let tipoMedicacao = await this.tipoDemandaRepo.findOne({ where: { descricao: 'Medicação' } });
     if (!tipoMedicacao) {
       tipoMedicacao = await this.tipoDemandaRepo.save(this.tipoDemandaRepo.create({ descricao: 'Medicação' }));
+    }
+
+    let tipoExame = await this.tipoDemandaRepo.findOne({ where: { descricao: 'Exame' } });
+    if (!tipoExame) {
+      tipoExame = await this.tipoDemandaRepo.save(this.tipoDemandaRepo.create({ descricao: 'Exame' }));
     }
 
     let statusPendente = await this.statusDemandaRepo.findOne({ where: { descricao: 'pendente' } });
@@ -460,18 +466,20 @@ export class SighSyncService {
 
         if (!leito) continue;
 
-        occupiedLeitoIds.add(leito.id);
+        const dataEntrada = row.data_atendimento ? new Date(row.data_atendimento) : new Date();
+        const dataSaida = row.data_alta ? new Date(row.data_alta) : null;
+
+        if (!dataSaida) {
+          occupiedLeitoIds.add(leito.id);
+        }
 
         const extFiaId = row.id_fia ? String(row.id_fia) : null;
-        const descrStatusInt = (row.descr_situacao_atendimento || 'ativa').toLowerCase();
+        const descrStatusInt = dataSaida ? 'encerrada' : (row.descr_situacao_atendimento || 'ativa').toLowerCase();
 
         let statusInt = await this.statusInternacaoRepo.findOne({ where: { descricao: descrStatusInt } });
         if (!statusInt) {
           statusInt = await this.statusInternacaoRepo.save(this.statusInternacaoRepo.create({ descricao: descrStatusInt }));
         }
-
-        const dataEntrada = row.data_atendimento ? new Date(row.data_atendimento) : new Date();
-        const dataSaida = row.data_alta ? new Date(row.data_alta) : null;
 
         let internacao = extFiaId
           ? await this.internacaoRepo.findOne({ where: { idSistemaExterno: extFiaId } })
@@ -760,6 +768,56 @@ export class SighSyncService {
       }
     } catch (err) {
       this.logger.warn(`Aprazamentos de medicamentos nao sincronizados: ${(err as Error).message}`);
+    }
+
+    // 7. Sincronizar Solicitações de Exames em Prescrições (Gerar Chamadas para Enfermagem)
+    try {
+      const examesSigh = await this.connectionService.executeQuery<{
+        cod_prescricao: number | string;
+        cod_exame: number | string;
+        descr_proc: string | null;
+        data_hora_presc: Date | string | null;
+        cod_fia: number | string | null;
+      }>(credentials, SIGH_QUERIES.GET_REQUISICOES_EXAMES);
+
+      for (const row of examesSigh) {
+        if (!row.cod_fia) continue;
+
+        const fiaId = String(row.cod_fia);
+        const internacao = await this.internacaoRepo.findOne({
+          where: { idSistemaExterno: fiaId },
+        });
+
+        if (!internacao) continue;
+
+        const prescId = row.cod_prescricao ? String(row.cod_prescricao) : '0';
+        const exameId = row.cod_exame ? String(row.cod_exame) : '0';
+        const dataHoraStr = row.data_hora_presc ? new Date(row.data_hora_presc).toISOString() : 'sem_data';
+        const uniqueKey = `exame_${prescId}_${exameId}_${dataHoraStr}`;
+
+        let demandaExistente = await this.demandaRepo.findOne({
+          where: { idSistemaExterno: uniqueKey },
+        });
+
+        if (!demandaExistente) {
+          const nomeExame = row.descr_proc || 'Exame Solicitado';
+          const obsText = `Exame solicitado: ${nomeExame} (Prescrição #${prescId})`;
+
+          await this.demandaRepo.save(
+            this.demandaRepo.create({
+              internacaoId: internacao.id,
+              tipoDemandaId: tipoExame.id,
+              statusDemandaId: statusPendente.id,
+              dataHoraSolicitacao: row.data_hora_presc ? new Date(row.data_hora_presc) : new Date(),
+              observacao: obsText,
+              idSistemaExterno: uniqueKey,
+            }),
+          );
+          summary.exames++;
+        }
+      }
+    } catch (err) {
+      this.logger.warn(`Requisicoes de exames nao sincronizadas: ${(err as Error).message}`);
     }
 
     return summary;

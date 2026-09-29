@@ -1,5 +1,6 @@
-import { Activity, Clock3, Repeat2, TrendingUp, Users } from 'lucide-react';
+import { Activity, Clock3, Repeat2, Sparkles, TrendingUp, Users } from 'lucide-react';
 import type { ElementType } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useDashboardStats } from '../../hooks/useDashboardStats';
 import type { Bed as BedType } from '../../types/Dashboard';
 
@@ -70,6 +71,7 @@ export default function Header({
   beds,
 }: HeaderProps) {
   const stats = useDashboardStats(beds);
+  const navigate = useNavigate();
 
   return (
     <header className="rounded-lg bg-white px-3 py-2.5 shadow-sm ring-1 ring-primary-light">
@@ -80,7 +82,17 @@ export default function Header({
           </div>
 
           <div className="leading-tight">
-            <h1 className="text-xl font-black text-primary-dark">Careboard</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-black text-primary-dark">Careboard</h1>
+              <button
+                onClick={() => navigate('/higienizacao')}
+                className="inline-flex items-center gap-1 rounded bg-teal-600 px-2 py-0.5 text-[10px] font-bold text-white hover:bg-teal-700 transition-colors"
+                title="Ir para o Módulo de Higienização"
+              >
+                <Sparkles size={11} />
+                <span>Higienização</span>
+              </button>
+            </div>
             <p className="mt-0.5 text-xs font-medium text-primary-dark/60">
               {hospitalName} | {unitName}
             </p>

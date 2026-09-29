@@ -1,4 +1,4 @@
-﻿export const SIGH_QUERIES = {
+export const SIGH_QUERIES = {
   GET_UNIDADES: `
     SELECT 
       id_unidade,
@@ -29,7 +29,10 @@
       fa.cod_motivo_isolamento,
       fa.data_atendimento,
       fa.data_alta,
-      'ativa' AS descr_situacao_atendimento,
+      CASE 
+        WHEN fa.data_alta IS NOT NULL THEN 'encerrada'
+        ELSE 'ativa'
+      END AS descr_situacao_atendimento,
       u.id_unidade,
       u.nm_unidade,
       fa.cod_leito AS id_leito,
@@ -40,8 +43,7 @@
     LEFT JOIN sigh.leitos l ON fa.cod_leito = l.id_leito
     LEFT JOIN sigh.quartos_enfermarias q ON l.cod_quarto_enf = q.id_quarto_enf
     LEFT JOIN sigh.unidades u ON u.id_unidade = fa.cod_unidade
-    WHERE fa.tipo_atend = 'INT'
-      AND fa.data_alta IS NULL;
+    WHERE fa.tipo_atend = 'INT';
   `,
 
   GET_SINAIS_VITAIS: `
@@ -88,5 +90,20 @@
       AND fia.data_alta IS NULL
       AND ire.tipo_item_prescricao = 'ME'
       AND (ire.data = CURRENT_DATE OR ire.data IS NULL);
+  `,
+
+  GET_REQUISICOES_EXAMES: `
+    SELECT DISTINCT
+      pre.cod_prescricao,
+      pre.cod_exame,
+      proc.descr_proc,
+      pre.data_hora_presc,
+      COALESCE(pp.cod_fia, pre.cod_fia) AS cod_fia
+    FROM sigh.pacientes_requisicoes_exames pre
+    LEFT JOIN sigh.procedimentos proc ON (proc.id_procedimento = pre.cod_exame OR proc.cod_procedimento = pre.cod_exame)
+    LEFT JOIN sigh.pacientes_prescricoes pp ON (pp.id_prescricao = pre.cod_prescricao OR pp.cod_prescricao = pre.cod_prescricao)
+    LEFT JOIN sigh.ficha_amb_int fia ON fia.id_fia = COALESCE(pp.cod_fia, pre.cod_fia)
+    WHERE fia.tipo_atend = 'INT'
+      AND (fia.data_alta IS NULL OR fia.data_alta > CURRENT_DATE - INTERVAL '1 day');
   `,
 };

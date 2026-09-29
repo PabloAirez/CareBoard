@@ -1,4 +1,4 @@
-﻿import { ClipboardList, Clock3, PhoneCall, Pill, ShieldAlert, Utensils } from 'lucide-react';
+import { ClipboardList, Clock3, FileText, PhoneCall, Pill, ShieldAlert, Utensils } from 'lucide-react';
 import type { Call } from '../../types/Dashboard';
 
 export function CallCard({ call }: { call: Call }) {
@@ -12,6 +12,9 @@ export function CallCard({ call }: { call: Call }) {
         return Pill;
       case 'alimentação':
         return Utensils;
+      case 'exame':
+      case 'exames':
+        return FileText;
       default:
         return ClipboardList;
     }

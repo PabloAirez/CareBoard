@@ -1,4 +1,4 @@
-﻿import { Injectable, OnApplicationBootstrap, Logger } from '@nestjs/common';
+import { Injectable, OnApplicationBootstrap, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { HospitalOrmEntity } from '../hospital/infraestructure/orm/hospital-orm-entity';
@@ -8,17 +8,19 @@ import { StatusLeitoOrmEntity } from '../status-leito/infraestructure/orm/status
 import { TipoDemandaOrmEntity } from '../tipo-demanda/infraestructure/orm/tipo-demanda-orm-entity';
 import { TipoUsuarioOrmEntity } from '../tipo-usuario/infraestructure/orm/tipo-usuario-orm-entity';
 import { UsuarioOrmEntity } from '../usuario/infraestructure/orm/usuario-orm-entity';
+import { LeitoOrmEntity } from '../leito/infraestructure/orm/leito-orm-entity';
 
 const bedStatuses = [
   'livre',
   'bloqueado',
   'aguardando desocupação',
+  'esperando higienização',
   'aguardando higienização',
   'em higienização',
   'ocupado',
 ];
 
-const demandTypes = ['Assistência', 'Medicação', 'Alimentação', 'Emergência', 'Higiene', 'Outros'];
+const demandTypes = ['Assistência', 'Medicação', 'Alimentação', 'Emergência', 'Higiene', 'Exame', 'Outros'];
 
 @Injectable()
 export class CareboardSeed implements OnApplicationBootstrap {
@@ -39,6 +41,8 @@ export class CareboardSeed implements OnApplicationBootstrap {
     private readonly hospitalRepository: Repository<HospitalOrmEntity>,
     @InjectRepository(UsuarioOrmEntity)
     private readonly usuarioRepository: Repository<UsuarioOrmEntity>,
+    @InjectRepository(LeitoOrmEntity)
+    private readonly leitoRepository: Repository<LeitoOrmEntity>,
   ) {}
 
   async onApplicationBootstrap() {
@@ -61,6 +65,7 @@ export class CareboardSeed implements OnApplicationBootstrap {
     const tipoEnfermeiro = await this.findOrCreate(this.tipoUsuarioRepository, { descricao: 'enfermeiro' });
     await this.findOrCreate(this.tipoUsuarioRepository, { descricao: 'paciente' });
     await this.findOrCreate(this.tipoUsuarioRepository, { descricao: 'Leito' });
+    const tipoHigienizacao = await this.findOrCreate(this.tipoUsuarioRepository, { descricao: 'higienizacao' });
 
     const hospital = await this.ensureDefaultHospital();
 
@@ -77,6 +82,38 @@ export class CareboardSeed implements OnApplicationBootstrap {
           hospitalId: hospital.id,
         }),
       );
+    }
+
+    const usuarioHigienizacao = await this.usuarioRepository.findOne({
+      where: { nome: 'higienizacao', hospitalId: hospital.id },
+    });
+
+    if (!usuarioHigienizacao) {
+      await this.usuarioRepository.save(
+        this.usuarioRepository.create({
+          nome: 'higienizacao',
+          senha: '123456',
+          tipoUsuarioId: tipoHigienizacao.id,
+          hospitalId: hospital.id,
+        }),
+      );
+    }
+
+    // Marca 2 leitos com status "esperando higienização" se existirem leitos livres ou disponiveis
+    const statusEsperando = await this.statusLeitoRepository.findOne({
+      where: [{ descricao: 'esperando higienização' }, { descricao: 'aguardando higienização' }],
+    });
+
+    if (statusEsperando) {
+      const leitosLivres = await this.leitoRepository.find({
+        where: [{ statusLeitoId: 1 }], // livre
+        take: 2,
+      });
+
+      for (const leito of leitosLivres) {
+        leito.statusLeitoId = statusEsperando.id;
+        await this.leitoRepository.save(leito);
+      }
     }
   }
 
