@@ -1,4 +1,4 @@
-﻿import { Injectable, OnApplicationBootstrap, Logger } from '@nestjs/common';
+import { Injectable, OnApplicationBootstrap, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { HospitalOrmEntity } from '../hospital/infraestructure/orm/hospital-orm-entity';
@@ -18,7 +18,7 @@ const bedStatuses = [
   'ocupado',
 ];
 
-const demandTypes = ['Assistência', 'Medicação', 'Alimentação', 'Emergência', 'Higiene', 'Outros'];
+const demandTypes = ['Assistência', 'Medicação', 'Alimentação', 'Emergência', 'Higiene', 'Exame', 'Outros'];
 
 @Injectable()
 export class CareboardSeed implements OnApplicationBootstrap {
